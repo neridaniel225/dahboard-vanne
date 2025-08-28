@@ -1,0 +1,3580 @@
+<!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Tableau de Bord Distribution d'Eau</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background-color: #f8fafc;
+                color: #1e293b;
+            }
+
+            .app-container {
+                display: flex;
+                height: 100vh;
+            }
+
+            .sidebar {
+                width: 256px;
+                background-color: #1f2937;
+                padding: 24px;
+                color: white;
+                flex-shrink: 0;
+            }
+
+            .sidebar h2 {
+                font-size: 24px;
+                font-weight: bold;
+                margin-bottom: 32px;
+            }
+
+            .nav-button {
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 12px 16px;
+                margin-bottom: 16px;
+                border: none;
+                border-radius: 8px;
+                background: transparent;
+                color: #d1d5db;
+                font-size: 18px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .nav-button:hover {
+                background-color: #374151;
+            }
+
+            .nav-button.active {
+                background-color: #374151;
+                color: white;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+
+            .main-content {
+                flex: 1;
+                overflow-y: auto;
+                background-color: #f8fafc;
+            }
+
+            .page {
+                padding: 32px;
+            }
+
+            .page-header {
+                margin-bottom: 32px;
+            }
+
+            .page-header h1 {
+                font-size: 30px;
+                font-weight: 800;
+                margin-bottom: 4px;
+                color: #0f172a;
+            }
+
+            .page-header p {
+                color: #64748b;
+            }
+
+            /* Water Resource State Page Styles */
+            .resource-header {
+                background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                border-radius: 16px;
+                padding: 32px;
+                margin-bottom: 32px;
+                color: white;
+                text-align: center;
+            }
+
+            .resource-title {
+                font-size: 32px;
+                font-weight: 800;
+                margin-bottom: 16px;
+            }
+
+            .resource-subtitle {
+                font-size: 18px;
+                opacity: 0.9;
+            }
+
+            .resource-datetime {
+                font-size: 16px;
+                margin-top: 8px;
+                opacity: 0.8;
+            }
+
+            .water-stock-section {
+                background: linear-gradient(135deg, #3a96ed 0%, #214bb6 100%);
+                border-radius: 16px;
+                padding: 24px;
+                margin-bottom: 32px;
+                color: white;
+                text-align: center;
+            }
+
+            .stock-title {
+                font-size: 24px;
+                font-weight: 700;
+                margin-bottom: 16px;
+            }
+
+            .stock-info {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+
+            .stock-item {
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 12px;
+                padding: 16px;
+                backdrop-filter: blur(10px);
+            }
+
+            .stock-item-label {
+                font-size: 14px;
+                opacity: 0.9;
+                margin-bottom: 8px;
+            }
+
+            .stock-item-value {
+                font-size: 24px;
+                font-weight: 700;
+            }
+
+            .stock-item-unit {
+                font-size: 16px;
+                opacity: 0.8;
+            }
+
+            /* 3D Water Level Visualization */
+            .water-level-3d {
+                background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+                border-radius: 16px;
+                padding: 24px;
+                margin-bottom: 32px;
+                color: white;
+            }
+
+            .water-level-title {
+                font-size: 20px;
+                font-weight: 700;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .water-level-canvas {
+                width: 100%;
+                height: 300px;
+                border-radius: 12px;
+                background: linear-gradient(180deg, #87ceeb 0%, #4682b4 50%, #2f4f4f 100%);
+                position: relative;
+                overflow: hidden;
+            }
+
+            .water-level-info {
+                display: flex;
+                justify-content: space-around;
+                margin-top: 20px;
+                text-align: center;
+            }
+
+            .water-level-stat {
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 12px;
+                backdrop-filter: blur(5px);
+            }
+
+            .water-level-stat-label {
+                font-size: 12px;
+                opacity: 0.8;
+                margin-bottom: 4px;
+            }
+
+            .water-level-stat-value {
+                font-size: 18px;
+                font-weight: 700;
+            }
+
+            /* Valve Status Grid */
+            .valve-status-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 24px;
+                margin-bottom: 32px;
+            }
+
+            .valve-status-card {
+                background: #ecfdf5;
+                border: 2px solid #10b981;
+                border-radius: 16px;
+                padding: 24px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                text-align: center;
+            }
+
+            .valve-status-title {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                color: #065f46;
+            }
+
+            .valve-status-number {
+                font-size: 48px;
+                font-weight: 800;
+                margin-bottom: 8px;
+                color: #065f46;
+            }
+
+            /* Volume Stats Grid */
+            .volume-stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 24px;
+                margin-bottom: 32px;
+            }
+
+            .volume-stats-card {
+                background: #fef3e2;
+                border: 2px solid #ea580c;
+                border-radius: 16px;
+                padding: 24px;
+                text-align: center;
+            }
+
+            .volume-stats-title {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #9a3412;
+            }
+
+            .volume-stats-datetime {
+                font-size: 14px;
+                color: #ea580c;
+                margin-bottom: 12px;
+            }
+
+            .volume-stats-value {
+                font-size: 32px;
+                font-weight: 800;
+                color: #9a3412;
+            }
+
+            /* Charts Grid */
+            .charts-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+                gap: 32px;
+                margin-bottom: 32px;
+            }
+
+            .chart-card {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 16px;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+                height: 280px;
+                min-height: 280px;
+                max-height: 280px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .chart-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+                flex-shrink: 0;
+            }
+
+            .chart-title {
+                font-size: 16px;
+                font-weight: 600;
+                color: #0f172a;
+            }
+
+            .chart-subtitle {
+                font-size: 12px;
+                color: #9ca3af;
+            }
+
+            .chart-wrapper {
+                flex: 1;
+                position: relative;
+                height: 220px;
+                min-height: 220px;
+                max-height: 220px;
+            }
+
+            .chart-canvas {
+                width: 100%;
+                height: 220px !important;
+                max-height: 220px !important;
+                min-height: 220px !important;
+            }
+
+            /* Dark chart theme */
+            .dark-chart {
+                background: linear-gradient(135deg, #7c2d12 0%, #451a03 100%);
+                color: white;
+            }
+
+            /* Blue chart theme */
+            .blue-chart {
+                background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+                color: white;
+            }
+
+            /* Dashboard Page Styles */
+            .alert {
+                background-color: #fef2f2;
+                border-left: 4px solid #ef4444;
+                color: #dc2626;
+                padding: 12px 16px;
+                border-radius: 8px;
+                margin-bottom: 24px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .notification {
+                position: fixed;
+                top: 32px;
+                right: 32px;
+                background-color: #2563eb;
+                color: white;
+                border-radius: 8px;
+                padding: 12px 16px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                z-index: 30;
+            }
+
+            .notification button {
+                margin-left: 12px;
+                font-size: 12px;
+                text-decoration: underline;
+                background: none;
+                border: none;
+                color: #93c5fd;
+                cursor: pointer;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 24px;
+                margin-bottom: 40px;
+            }
+
+            .stats-card {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+                transition: box-shadow 0.2s;
+            }
+
+            .stats-card:hover {
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+
+            .stats-card .title {
+                color: #64748b;
+                font-size: 14px;
+                margin-bottom: 4px;
+            }
+
+            .stats-card .value {
+                font-size: 30px;
+                font-weight: bold;
+                color: #059669;
+            }
+
+            .stats-card .value.alert {
+                color: #dc2626;
+            }
+
+            .stats-card .unit {
+                font-size: 18px;
+            }
+
+            .valve-container {
+                display: flex;
+                gap: 16px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .valve-card {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                border: 1px solid;
+                border-radius: 8px;
+                padding: 16px;
+                min-width: 120px;
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                background: white;
+            }
+
+            .valve-card.ouvert {
+                background-color: #f0fdf4;
+                border-color: #22c55e;
+            }
+
+            .valve-card.ferme {
+                background-color: #fef2f2;
+                border-color: #ef4444;
+            }
+
+            .valve-card.partiel {
+                background-color: #fffbeb;
+                border-color: #f59e0b;
+            }
+
+            .valve-badge {
+                font-size: 14px;
+                padding: 4px 8px;
+                border-radius: 6px;
+                border: 1px solid;
+            }
+
+            .valve-badge.ouvert {
+                background-color: #22c55e;
+                color: white;
+            }
+
+            .valve-badge.ferme {
+                background-color: #ef4444;
+                color: white;
+            }
+
+            .valve-badge.partiel {
+                background-color: #f59e0b;
+                color: white;
+            }
+
+            .valve-light {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                border: 2px solid;
+            }
+
+            .valve-light.ouvert {
+                background-color: #4ade80;
+                border-color: #22c55e;
+            }
+
+            .valve-light.ferme {
+                background-color: #f87171;
+                border-color: #dc2626;
+            }
+
+            .valve-light.partiel {
+                background-color: #fbbf24;
+                border-color: #f59e0b;
+            }
+
+            .chart-container {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 16px;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+                height: 280px;
+                min-height: 280px;
+                max-height: 280px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .history-section {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 24px;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+                margin-bottom: 40px;
+            }
+
+            .history-header {
+                display: flex;
+                flex-direction: column;
+                gap: 24px;
+                margin-bottom: 12px;
+            }
+
+            @media (min-width: 768px) {
+                .history-header {
+                    flex-direction: row;
+                    align-items: end;
+                    justify-content: space-between;
+                }
+            }
+
+            .history-title {
+                font-size: 20px;
+                font-weight: 600;
+                color: #0f172a;
+            }
+
+            .history-controls {
+                display: flex;
+                align-items: end;
+                gap: 16px;
+                flex-wrap: wrap;
+            }
+
+            .control-group {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .control-group label {
+                font-size: 12px;
+                color: #9ca3af;
+                margin-bottom: 2px;
+            }
+
+            .control-group select,
+            .control-group input {
+                border: 1px solid #d1d5db;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 14px;
+            }
+
+            .control-group select:focus,
+            .control-group input:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            }
+
+            .export-button {
+                background-color: #2563eb;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 4px;
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                white-space: nowrap;
+                border: none;
+                cursor: pointer;
+            }
+
+            .export-button:hover {
+                background-color: #1d4ed8;
+            }
+
+            .history-table {
+                overflow-x: auto;
+                margin-top: 16px;
+            }
+
+            .history-table table {
+                min-width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            }
+
+            .history-table th,
+            .history-table td {
+                padding: 8px 12px;
+                border: 1px solid #e5e7eb;
+                text-align: left;
+            }
+
+            .history-table th {
+                background-color: #f9fafb;
+                color: #374151;
+                font-weight: 500;
+            }
+
+            .history-table tr:nth-child(even) {
+                background-color: #f9fafb;
+            }
+
+            /* Valve Management Styles */
+            .automation-control {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 24px;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+                margin-bottom: 32px;
+            }
+
+            .automation-control h2 {
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                color: #0f172a;
+            }
+
+            .automation-control .controls {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .automation-control .label {
+                font-size: 18px;
+                color: #374151;
+            }
+
+            .automation-toggle {
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 14px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                transition: all 0.2s;
+                border: none;
+                cursor: pointer;
+            }
+
+            .automation-toggle.active {
+                background-color: #059669;
+                color: white;
+            }
+
+            .automation-toggle.inactive {
+                background-color: #e5e7eb;
+                color: #374151;
+            }
+
+            .automation-toggle.inactive:hover {
+                background-color: #d1d5db;
+            }
+
+            .active-valve {
+                color: #059669;
+                font-weight: 600;
+                margin-left: 16px;
+                animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+            }
+
+            .valve-management-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 24px;
+                margin-bottom: 40px;
+            }
+
+            .valve-management-card {
+                background: white;
+                border: 1px solid;
+                border-radius: 8px;
+                padding: 24px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: space-between;
+                min-height: 250px;
+            }
+
+            .valve-management-card h3 {
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 12px;
+                color: #0f172a;
+            }
+
+            .valve-status {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 8px;
+            }
+
+            .valve-status .light {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                border: 2px solid;
+            }
+
+            .valve-status .text {
+                font-size: 18px;
+                font-weight: 500;
+                color: #374151;
+                text-transform: capitalize;
+            }
+
+            .automation-section {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 16px;
+            }
+
+            .automation-section label {
+                font-size: 14px;
+                color: #64748b;
+                margin-bottom: 8px;
+            }
+
+            .automation-section input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                accent-color: #2563eb;
+            }
+
+            .automation-section .status {
+                font-size: 12px;
+                color: #374151;
+                margin-top: 4px;
+            }
+
+            .limit-section {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 16px;
+            }
+
+            .limit-section label {
+                font-size: 14px;
+                color: #64748b;
+                margin-bottom: 8px;
+            }
+
+            .limit-section input {
+                border: 1px solid #d1d5db;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 14px;
+                width: 96px;
+                text-align: center;
+            }
+
+            .limit-section input:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            }
+
+            .valve-buttons {
+                display: flex;
+                gap: 16px;
+            }
+
+            .valve-button {
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 14px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                transition: all 0.2s;
+                border: none;
+                cursor: pointer;
+            }
+
+            .valve-button.open {
+                background-color: #2563eb;
+                color: white;
+            }
+
+            .valve-button.open:hover:not(:disabled) {
+                background-color: #1d4ed8;
+            }
+
+            .valve-button.close {
+                background-color: #dc2626;
+                color: white;
+            }
+
+            .valve-button.close:hover:not(:disabled) {
+                background-color: #b91c1c;
+            }
+
+            .valve-button:disabled {
+                background-color: #d1d5db;
+                color: #9ca3af;
+                cursor: not-allowed;
+            }
+
+            .sequence-editor {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 24px;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+                margin-top: 40px;
+            }
+
+            .sequence-editor h2 {
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                color: #0f172a;
+            }
+
+            .sequence-editor p {
+                margin-bottom: 16px;
+                color: #64748b;
+            }
+
+            .sequence-grid {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .sequence-item {
+                cursor: move;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 12px;
+                border: 1px solid;
+                border-radius: 6px;
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                width: 96px;
+                height: 96px;
+                flex-direction: column;
+            }
+
+            .sequence-item.automated {
+                background-color: #f0fdf4;
+                border-color: #bbf7d0;
+            }
+
+            .sequence-item.not-automated {
+                background-color: #f9fafb;
+                border-color: #d1d5db;
+                color: #9ca3af;
+            }
+
+            .sequence-item .name {
+                font-weight: 600;
+                text-align: center;
+                font-size: 14px;
+            }
+
+            .sequence-item .number {
+                font-size: 12px;
+                font-family: monospace;
+                margin-top: 4px;
+                background-color: #e5e7eb;
+                padding: 2px 8px;
+                border-radius: 4px;
+            }
+
+            .sequence-item .status {
+                font-size: 12px;
+                margin-top: 4px;
+                color: #dc2626;
+            }
+
+            /* ESP32 Discovery Styles */
+            .discovery-section {
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 32px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                margin-top: 40px;
+            }
+
+            .discovery-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 24px;
+            }
+
+            .discovery-title {
+                font-size: 24px;
+                font-weight: 700;
+                color: #0f172a;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .discovery-icon {
+                width: 32px;
+                height: 32px;
+                background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 18px;
+            }
+
+            .scan-button {
+                background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                color: white;
+                padding: 14px 28px;
+                border-radius: 10px;
+                font-weight: 600;
+                font-size: 16px;
+                border: none;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .scan-button:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            }
+
+            .scan-button:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            .scan-button.scanning {
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                animation: scanPulse 1.5s infinite;
+            }
+
+            @keyframes scanPulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+
+            .discovery-description {
+                color: #64748b;
+                font-size: 16px;
+                margin-bottom: 32px;
+                line-height: 1.6;
+            }
+
+            .scan-status {
+                background: #f8fafc;
+                border: 2px dashed #cbd5e1;
+                border-radius: 12px;
+                padding: 24px;
+                text-align: center;
+                margin-bottom: 32px;
+                transition: all 0.3s ease;
+            }
+
+            .scan-status.scanning {
+                background: linear-gradient(45deg, #fef3c7, #fde68a);
+                border-color: #f59e0b;
+                border-style: solid;
+            }
+
+            .scan-spinner {
+                width: 48px;
+                height: 48px;
+                border: 4px solid #e5e7eb;
+                border-top: 4px solid #3b82f6;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 16px;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            .scan-text {
+                font-size: 18px;
+                font-weight: 600;
+                color: #374151;
+                margin-bottom: 8px;
+            }
+
+            .scan-subtext {
+                color: #6b7280;
+                font-size: 14px;
+            }
+
+            .devices-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                gap: 24px;
+                margin-top: 32px;
+            }
+
+            .device-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+            .device-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            }
+
+            .device-card.available {
+                border-color: #3b82f6;
+                background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            }
+
+            .device-card.connecting {
+                border-color: #f59e0b;
+                background: linear-gradient(135deg, #fffbeb, #fef3c7);
+                animation: connectPulse 2s infinite;
+            }
+
+            .device-card.connected {
+                border-color: #10b981;
+                background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            }
+
+            @keyframes connectPulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.02); }
+            }
+
+            .device-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .device-name {
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+
+            .device-status-badge {
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .device-status-badge.available {
+                background: #3b82f6;
+                color: white;
+            }
+
+            .device-status-badge.connecting {
+                background: #f59e0b;
+                color: white;
+                animation: badgePulse 1.5s infinite;
+            }
+
+            .device-status-badge.connected {
+                background: #10b981;
+                color: white;
+            }
+
+            @keyframes badgePulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+            }
+
+            .device-info {
+                margin-bottom: 20px;
+            }
+
+            .device-info-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 8px;
+                font-size: 14px;
+            }
+
+            .device-info-label {
+                color: #6b7280;
+                font-weight: 500;
+            }
+
+            .device-info-value {
+                color: #374151;
+                font-family: monospace;
+                font-weight: 600;
+            }
+
+            .signal-strength {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .signal-bars {
+                display: flex;
+                gap: 2px;
+                align-items: end;
+            }
+
+            .signal-bar {
+                width: 4px;
+                background: #d1d5db;
+                border-radius: 2px;
+            }
+
+            .signal-bar:nth-child(1) { height: 8px; }
+            .signal-bar:nth-child(2) { height: 12px; }
+            .signal-bar:nth-child(3) { height: 16px; }
+            .signal-bar:nth-child(4) { height: 20px; }
+
+            .signal-bar.active {
+                background: #10b981;
+            }
+
+            .signal-percentage {
+                font-weight: 600;
+                color: #374151;
+            }
+
+            .device-components {
+                margin-bottom: 20px;
+            }
+
+            .component-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 6px;
+                font-size: 14px;
+            }
+
+            .component-check {
+                color: #10b981;
+                font-weight: bold;
+            }
+
+            .device-actions {
+                display: flex;
+                gap: 12px;
+            }
+
+            .action-button {
+                flex: 1;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 14px;
+                border: none;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .action-button.connect {
+                background: #3b82f6;
+                color: white;
+            }
+
+            .action-button.connect:hover:not(:disabled) {
+                background: #2563eb;
+            }
+
+            .action-button.ignore {
+                background: #f3f4f6;
+                color: #6b7280;
+                border: 1px solid #d1d5db;
+            }
+
+            .action-button.ignore:hover {
+                background: #e5e7eb;
+            }
+
+            .action-button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .message {
+                margin-top: 16px;
+                padding: 12px 16px;
+                border-radius: 6px;
+            }
+
+            .message.success {
+                background-color: #f0fdf4;
+                color: #166534;
+                border: 1px solid #bbf7d0;
+            }
+
+            .message.error {
+                background-color: #fef2f2;
+                color: #dc2626;
+                border: 1px solid #fecaca;
+            }
+
+            .footer {
+                font-size: 12px;
+                color: #9ca3af;
+                text-align: center;
+            }
+
+            .hidden {
+                display: none;
+            }
+
+            .delete-button {
+                background-color: #dc2626;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 8px 12px;
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                margin-top: 8px;
+            }
+
+            .delete-button:hover {
+                background-color: #b91c1c;
+                transform: translateY(-1px);
+            }
+
+            .delete-button:disabled {
+                background-color: #9ca3af;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            /* Modal de confirmation - SUPPRIMÉ car utilise déjà confirm() natif */
+
+            .delete-icon {
+                background-color: #dc2626;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-size: 16px;
+                margin-top: 8px;
+            }
+
+            .delete-icon:hover:not(:disabled) {
+                background-color: #b91c1c;
+                transform: scale(1.1);
+            }
+
+            .delete-icon:disabled {
+                background-color: #9ca3af;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            /* Manual Device Registration Styles */
+            .manual-registration {
+                background: #f8fafc;
+                border: 2px dashed #cbd5e1;
+                border-radius: 12px;
+                padding: 20px;
+                margin: 20px 0;
+                text-align: center;
+            }
+
+            .manual-registration h3 {
+                color: #374151;
+                margin-bottom: 8px;
+            }
+
+            .manual-registration p {
+                color: #6b7280;
+                font-size: 14px;
+                margin-bottom: 15px;
+            }
+
+            .manual-form {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+
+            .manual-form input {
+                padding: 10px 12px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                font-size: 14px;
+                min-width: 160px;
+            }
+
+            .manual-form input:focus {
+                outline: none;
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="app-container">
+            <nav class="sidebar">
+                <h2>Menu</h2>
+                <button id="resource-btn" class="nav-button active">État de la Ressource</button>
+                <button id="dashboard-btn" class="nav-button">État des vannes </button>
+                <button id="valve-btn" class="nav-button">Gestion des Vannes</button>
+            </nav>
+
+            <main class="main-content">
+                <!-- Water Resource State Page -->
+                <div id="resource-page" class="page">
+                    <div class="resource-header">
+                        <div class="resource-title">État de la Ressource en Eau</div>
+                        <div class="resource-subtitle">Aménagement Hydroagricole</div>
+                        <div id="resource-datetime" class="resource-datetime"></div>
+                    </div>
+
+                    <div class="water-stock-section">
+                        <div class="stock-title">Stock d'eau disponible</div>
+                        <div class="stock-info">
+                            <div class="stock-item">
+                                <div class="stock-item-label">Cote du plan d'eau (m NGCI)</div>
+                                <div class="stock-item-value">182.4</div>
+                            </div>
+                            <div class="stock-item">
+                                <div class="stock-item-label">Stock d'eau disponible (million m3)</div>
+                                <div class="stock-item-value">1.24</div>
+                            </div>
+                            <div class="stock-item">
+                                <div class="stock-item-label">Pourcentage d'eau disponible</div>
+                                <div class="stock-item-value" id="water-percentage">85<span class="stock-item-unit">%</span></div>
+                            </div>
+                            <div class="stock-item">
+                                <div class="stock-item-label">Durée d'exploitation du stock disponible (jour)</div>
+                                <div class="stock-item-value">82</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="water-level-3d">
+                        <div class="water-level-title">Cote du plan d'eau - Visualisation 3D</div>
+                        <div class="water-level-canvas" id="water-level-3d-canvas"></div>
+                        <div class="water-level-info">
+                            <div class="water-level-stat">
+                                <div class="water-level-stat-label">Niveau d'eau</div>
+                                <div class="water-level-stat-value">182.4m</div>
+                            </div>
+                            <div class="water-level-stat">
+                                <div class="water-level-stat-label">Envasement</div>
+                                <div class="water-level-stat-value">15%</div>
+                            </div>
+                            <div class="water-level-stat">
+                                <div class="water-level-stat-label">Capacité utilisée</div>
+                                <div class="water-level-stat-value" id="capacity-used">85%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="valve-status-grid">
+                        <div class="valve-status-card">
+                            <div class="valve-status-title">Nombre de vannes installées :</div>
+                            <div class="valve-status-number" id="total-valves">14</div>
+                        </div>
+                        <div class="valve-status-card">
+                            <div class="valve-status-title">Nombre de vannes ouvertes :</div>
+                            <div class="valve-status-number" id="open-valves">3</div>
+                        </div>
+                    </div>
+
+                    <div class="volume-stats-grid">
+                        <div class="volume-stats-card">
+                            <div class="volume-stats-title">Volume total journalier cumulé :</div>
+                            <div class="volume-stats-datetime" id="daily-datetime">06/08/2025 15:58</div>
+                            <div class="volume-stats-value">C VTD : 125 <span style="font-size: 20px;">m3</span></div>
+                        </div>
+                        <div class="volume-stats-card">
+                            <div class="volume-stats-title">Volume distribué :</div>
+                            <div class="volume-stats-datetime" id="distributed-datetime">06/08/2025 15:58</div>
+                            <div class="volume-stats-value">VTD: 60 <span style="font-size: 20px;">m3</span></div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <span class="chart-title">Volume d'eau cumulé</span>
+                                <div class="chart-subtitle">Historique</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="cumulative-volume-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <span class="chart-title">Volume d'eau distribué</span>
+                                <div class="chart-subtitle">Par vanne</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="distributed-volume-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nouveaux blocs basés sur l'image -->
+                    <div class="charts-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="chart-card dark-chart">
+                            <div class="chart-header">
+                                <span class="chart-title" style="color: white;">Cote du plan d'eau_Retenue</span>
+                                <div class="chart-subtitle" style="color: #94a3b8;">Cote du plan d'eau (m NGCI)</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="water-level-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card blue-chart">
+                            <div class="chart-header">
+                                <span class="chart-title" style="color: white;">Débit entrant_Retenue</span>
+                                <div class="chart-subtitle" style="color: #93c5fd;">Débit entrant (m3/s)</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="inflow-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card dark-chart">
+                            <div class="chart-header">
+                                <span class="chart-title" style="color: white;">Débit_Canaux primaires</span>
+                                <div class="chart-subtitle" style="color: #94a3b8;">Canaux primaire_2 (m3/s)</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="primary-channels-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <span class="chart-title">Stock d'eau disponible</span>
+                                <div class="chart-subtitle">(million m3)</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="water-stock-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <span class="chart-title">Pluviométrie</span>
+                                <div class="chart-subtitle">Station météo - Glowatch</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="rainfall-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <span class="chart-title">Prévisions de débits entrants (m3/s)</span>
+                                <div class="chart-subtitle">Prévisions 24h, 3 jours, 1 mois</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="inflow-forecast-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <span class="chart-title">Prévision du stock de la retenue</span>
+                                <div class="chart-subtitle">(million de m3)</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="stock-forecast-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        Développé avec ❤️ pour la gestion intelligente de l'eau.
+                    </div>
+                </div>
+
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page hidden">
+                    <div class="page-header">
+                        <h1>Tableau de Bord de distribution d'eau</h1>
+                        <p>Temps réel – contrôle et surveillance</p>
+                    </div>
+
+                    <div id="alerts-container"></div>
+                    <div id="notification" class="notification hidden">
+                        <span>🔔</span>
+                        <span id="notification-text"></span>
+                        <button onclick="hideNotification()">Fermer</button>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stats-card">
+                            <div class="title">Débit actuel</div>
+                            <div id="current-flow" class="value">0.0 <span class="unit">L/min</span></div>
+                        </div>
+                        <div class="stats-card">
+                            <div class="title">Volume total distribué</div>
+                            <div id="total-volume" class="value">0.0 <span class="unit">L</span></div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <span class="chart-title">Graphique du débit (L/min)</span>
+                                <div class="chart-subtitle">Dernières 30 min</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="flow-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-header">
+                                <span class="chart-title">Volume cumulé (L)</span>
+                                <div class="chart-subtitle">Dernières 30 min</div>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="volume-chart" class="chart-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stats-card">
+                            <div class="title">État des Vannes</div>
+                            <div id="valves-display" class="valve-container"></div>
+                        </div>
+                    </div>
+
+                    <div class="history-section">
+                        <div class="history-header">
+                            <div class="history-title">Historique du débit & volume</div>
+                            <div class="history-controls">
+                                <div class="control-group">
+                                    <label for="periode-select">Période</label>
+                                    <select id="periode-select">
+                                        <option value="jour">1 jour</option>
+                                        <option value="semaine">7 j.</option>
+                                        <option value="mois">30 j.</option>
+                                    </select>
+                                </div>
+                                <div class="control-group">
+                                    <label for="date-start">Du</label>
+                                    <input type="date" id="date-start">
+                                    <label for="date-end" style="margin-top: 8px;">Au</label>
+                                    <input type="date" id="date-end">
+                                </div>
+                                <button class="export-button" onclick="exportHistoryCSV()">Exporter CSV</button>
+                            </div>
+                        </div>
+
+                        <div class="history-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Heure</th>
+                                        <th>Débit (L/min)</th>
+                                        <th>Volume (L)</th>
+                                        <th>Vannes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        Développé avec ❤️ pour la gestion intelligente de l'eau.
+                    </div>
+                </div>
+
+                <!-- Valve Management Page -->
+                <div id="valve-page" class="page hidden">
+                    <div class="page-header">
+                        <h1>Gestion des Vannes</h1>
+                        <p>Contrôlez l'état de chaque casier de distribution et configurez l'automation.</p>
+                    </div>
+
+                    <div class="automation-control">
+                        <h2>Contrôle Global de l'Automation</h2>
+                        <div class="controls">
+                            <span class="label">Système d'Automation:</span>
+                            <button id="automation-toggle" class="automation-toggle inactive" onclick="toggleGlobalAutomation()">
+                                Désactivé
+                            </button>
+                            <span id="active-valve-display" class="active-valve hidden"></span>
+                        </div>
+                    </div>
+
+                    <div id="valve-management-grid" class="valve-management-grid"></div>
+
+                    <div class="sequence-editor">
+                        <h2>Ordre d'activation automatique des vannes</h2>
+                        <p>Glissez/déposez pour réorganiser l'ordre dans lequel les vannes s'activent automatiquement.</p>
+                        <div id="sequence-grid" class="sequence-grid"></div>
+                    </div>
+
+                    <!-- ESP32 Discovery Section -->
+                    <div class="discovery-section">
+                        <div class="discovery-header">
+                            <div class="discovery-title">
+                                <div class="discovery-icon">📡</div>
+                                Découverte d'Appareils ESP32
+                            </div>
+                            <button id="scan-button" class="scan-button" onclick="startDeviceScan()">
+                                🔍 Rechercher des Appareils
+                            </button>
+                        </div>
+                        
+                        <p class="discovery-description">
+                            Recherchez automatiquement des modules ESP32 équipés d'électrovannes et de capteurs de débit sur votre réseau. 
+                            Le système détectera les appareils compatibles et vous permettra de les ajouter facilement à votre installation.
+                        </p>
+
+                        <div id="scan-status" class="scan-status">
+                            <div class="scan-text">Aucune recherche en cours</div>
+                            <div class="scan-subtext">Cliquez sur "Rechercher des Appareils" pour détecter les modules ESP32 disponibles</div>
+                        </div>
+
+                        <!-- Manual Device Registration -->
+                        <div class="manual-registration">
+                            <h3>Ajout Manuel d'Appareil</h3>
+                            <p>Si la découverte automatique ne fonctionne pas (réseaux différents), ajoutez un ESP32 manuellement :</p>
+                            <div class="manual-form">
+                                <input type="text" id="manual-ip" placeholder="Adresse IP (ex: 192.168.1.100)" />
+                                <input type="text" id="manual-name" placeholder="Nom (optionnel)" />
+                                <button onclick="addManualDevice()" class="scan-button">Ajouter ESP32</button>
+                            </div>
+                        </div>
+
+                        <div id="devices-grid" class="devices-grid"></div>
+                        <div id="discovery-message" class="message hidden"></div>
+                    </div>
+
+                    <div class="footer">
+                        Développé avec ❤️ pour la gestion intelligente de l'eau.
+                    </div>
+                </div>
+            </main>
+        </div>
+
+
+      
+        <script>
+            // Socket.IO connection - UPDATE THIS URL WITH YOUR RENDER DEPconst SERVER_URL = 'https://your-app-name.onrender.com';LOYMENT
+            const SERVER_URL = 'https://water-management-server.onrender.com';
+            const socket = io(SERVER_URL);
+            
+            // Constants
+            const ALERT_MIN_DEBIT = 5;
+            const DEFAULT_AUTOMATION_LIMIT = 250;
+            const DUREE_MEMOIRE_EN_MIN = 30;
+            // Initial data - Will be loaded from server
+            let valveDefinitions = [];
+
+            let state = {
+                historique: [],
+                currentStats: {
+                    totalDistribue: 0,
+                    debitActuel: 0,
+                    vannesStates: [],
+                    alerts: []
+                },
+                globalAutomationActive: false,
+                activeAutomatedVanneId: null,
+                automationSequence: [],
+                discoveredDevices: [],
+                isScanning: false,
+                connected: false
+            };
+
+            // Chart instances
+            let flowChart = null;
+            let volumeChart = null;
+            let cumulativeVolumeChart = null;
+            let distributedVolumeChart = null;
+            let waterLevelChart = null;
+            let inflowChart = null;
+            let primaryChannelsChart = null;
+            let waterStockChart = null;
+            let rainfallChart = null;
+            let inflowForecastChart = null;
+            let stockForecastChart = null;
+            let waterLevel3DScene = null;
+            let waterLevel3DRenderer = null;
+            let waterLevel3DCamera = null;
+            let waterLevel3DAnimationId = null;
+
+            // Socket.IO Event Handlers
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                state.connected = true;
+                showNotification('Connecté au serveur');
+                
+               
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+                state.connected = false;
+                showNotification('Connexion au serveur perdue');
+            });
+
+            socket.on('initial_data', (data) => {
+                console.log('Received initial data:', data);
+                
+                // Load valve definitions
+                if (data.valveDefinitions) {
+                    valveDefinitions = data.valveDefinitions;
+                }
+                
+                // Load valve states
+                if (data.valveStates) {
+                    state.currentStats.vannesStates = data.valveStates;
+                }
+                
+                // Load automation sequence
+                if (data.automationSequence) {
+                    state.automationSequence = data.automationSequence;
+                }
+                
+                // Load historical data
+                if (data.historique) {
+                    state.historique = data.historique;
+                }
+                
+                updateUI();
+                showNotification('Données initiales chargées');
+            });
+
+            socket.on('sensor_data', (data) => {
+                console.log('Received sensor data:', data);
+                
+                // Update current stats
+                if (data.debitActuel !== undefined) {
+                    state.currentStats.debitActuel = data.debitActuel;
+                }
+                
+                if (data.totalDistribue !== undefined) {
+                    state.currentStats.totalDistribue = data.totalDistribue;
+                }
+                
+                // Update historical data
+                if (data.newDataPoint) {
+                    state.historique.push(data.newDataPoint);
+                    
+                    // Keep only recent data
+                    const cutoffTime = Date.now() - DUREE_MEMOIRE_EN_MIN * 60000;
+                    state.historique = state.historique.filter(point => point.timestamp > cutoffTime);
+                }
+                
+                updateUI();
+            });
+
+            socket.on('valve_state_update', (data) => {
+                console.log('Valve state updated:', data);
+                
+                const valveIndex = state.currentStats.vannesStates.findIndex(v => v.id === data.valveId);
+                if (valveIndex !== -1) {
+                    state.currentStats.vannesStates[valveIndex].etat = data.etat;
+                    updateUI();
+                    showNotification(`Vanne ${getValveName(data.valveId)} ${data.etat === 'ouvert' ? 'ouverte' : 'fermée'}`);
+                }
+            });
+
+            socket.on('automation_update', (data) => {
+                console.log('Automation update:', data);
+                
+                state.globalAutomationActive = data.active;
+                state.activeAutomatedVanneId = data.activeValveId;
+                
+                if (data.alert) {
+                    state.currentStats.alerts.push(data.alert);
+                    showNotification(data.alert);
+                }
+                
+                updateUI();
+            });
+
+            socket.on('device_discovered', (devices) => {
+                console.log('Devices discovered:', devices);
+                state.discoveredDevices = devices;
+                state.isScanning = false;
+                
+                updateScanButton();
+                updateScanStatus(devices.length);
+                updateDevicesGrid(devices);
+                
+                if (devices.length > 0) {
+                    showNotification(`${devices.length} appareil(s) ESP32 détecté(s)`);
+                } else {
+                    showNotification('Aucun appareil ESP32 trouvé sur le réseau');
+                }
+            });
+
+            socket.on('device_connected', (data) => {
+                console.log('Device connected:', data);
+                
+                if (data.success) {
+                    // Add new valve
+                    const newValve = {
+                        id: data.valveId,
+                        nom: data.nom,
+                        esp32Id: data.deviceId,
+                        location: data.location,
+                        type: data.type,
+                        capacity: data.capacity,
+                        description: data.description,
+                        etat: data.etat
+                    };
+                    
+                    const newValveState = {
+                        id: data.valveId,
+                        etat: data.etat,
+                        automated: false,
+                        automationLimit: DEFAULT_AUTOMATION_LIMIT,
+                        currentAutomatedVolume: 0,
+                        dailyVolume: 0,
+                        weeklyVolume: 0,
+                        monthlyVolume: 0
+                    };
+                    
+                    valveDefinitions.push(newValve);
+                    state.currentStats.vannesStates.push(newValveState);
+                    state.automationSequence.push(data.valveId);
+                    
+                    // Update device status in discovered devices
+                    const device = state.discoveredDevices.find(d => d.id === data.deviceId);
+                    if (device) {
+                        device.status = 'connected';
+                        updateDeviceCard(device);
+                    }
+                    
+                    showNotification(`${data.nom} connecté avec succès ! ID: ${data.valveId}`);
+                    updateUI();
+                } else {
+                    // Update device status back to available
+                    const device = state.discoveredDevices.find(d => d.id === data.deviceId);
+                    if (device) {
+                        device.status = 'available';
+                        updateDeviceCard(device);
+                    }
+                    
+                    showNotification(`Erreur lors de la connexion: ${data.error}`);
+                }
+            });
+
+            socket.on('alert', (message) => {
+                state.currentStats.alerts.push(message);
+                showNotification(message);
+                updateUI();
+            });
+
+            socket.on('error', (error) => {
+                console.error('Server error:', error);
+                showNotification(`Erreur serveur: ${error.message}`);
+            });
+            // Ajoutez ceci après les autres event handlers
+            socket.on('connect_error', (error) => {
+            console.error('Connection failed:', error);
+            state.connected = false;
+             showNotification('Impossible de se connecter au serveur');
+            });
+            // CORRECTION: Fonction d'initialisation des états des vannes
+            function initializeValveStates() {
+                // Data will be loaded from server via Socket.IO
+                // This function is kept for compatibility but not used for initialization
+                console.log('Valve states will be loaded from server');
+            }
+
+            // CORRECTION: Fonction de validation des données
+            function validateValveLimit(limit) {
+                const numLimit = parseInt(limit);
+                if (isNaN(numLimit) || numLimit < 1 || numLimit > 10000) {
+                    showNotification('Limite invalide. Doit être entre 1 et 10000L');
+                    return false;
+                }
+                return numLimit;
+            }
+
+            // CORRECTION: Fonction de synchronisation des états
+            function syncValveStates() {
+                // Data synchronization is handled by Socket.IO real-time updates
+                console.log('Valve states synced via Socket.IO');
+            }
+
+            // Utility functions
+            function formatTime(date) {
+                return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            }
+
+            function formatDate(date) {
+                return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+
+            function formatDateTime(date) {
+                return date.toLocaleDateString('fr-FR', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric' 
+                }) + ' ' + date.toLocaleTimeString([], { 
+                    hour: "2-digit", 
+                    minute: "2-digit" 
+                });
+            }
+
+            function getValveName(id) {
+                return valveDefinitions.find(v => v.id === id)?.nom || `Vanne ${id}`;
+            }
+
+            function getEtatStyle(etat) {
+                switch (etat) {
+                    case "ouvert": return "ouvert";
+                    case "ferme": return "ferme";
+                    case "partiel": return "partiel";
+                    default: return "ferme";
+                }
+            }
+
+            // CORRECTION: Gestion améliorée des animations 3D
+            function init3DWaterLevel() {
+                const canvas = document.getElementById('water-level-3d-canvas');
+                if (!canvas) return;
+
+                // Nettoyer l'ancien rendu
+                cleanup3DWaterLevel();
+
+                // Scene setup
+                waterLevel3DScene = new THREE.Scene();
+                waterLevel3DCamera = new THREE.PerspectiveCamera(75, canvas.offsetWidth / canvas.offsetHeight, 0.1, 1000);
+                waterLevel3DRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                waterLevel3DRenderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+                waterLevel3DRenderer.setClearColor(0x000000, 0);
+                
+                // Vider le canvas avant d'ajouter le nouveau rendu
+                canvas.innerHTML = '';
+                canvas.appendChild(waterLevel3DRenderer.domElement);
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+                waterLevel3DScene.add(ambientLight);
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(50, 50, 50);
+                waterLevel3DScene.add(directionalLight);
+
+                // Water basin (container) - CORRECTION: Utiliser CylinderGeometry
+                const basinGeometry = new THREE.CylinderGeometry(8, 10, 6, 32);
+                const basinMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x8B4513, 
+                    transparent: true, 
+                    opacity: 0.7 
+                });
+                const basin = new THREE.Mesh(basinGeometry, basinMaterial);
+                basin.position.y = -3;
+                waterLevel3DScene.add(basin);
+
+                // Sediment layer (envasement)
+                const sedimentGeometry = new THREE.CylinderGeometry(7.8, 9.8, 0.8, 32);
+                const sedimentMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
+                const sediment = new THREE.Mesh(sedimentGeometry, sedimentMaterial);
+                sediment.position.y = -5.6;
+                waterLevel3DScene.add(sediment);
+
+                // Water
+                const waterGeometry = new THREE.CylinderGeometry(7.5, 9.5, 4, 32);
+                const waterMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x1e90ff, 
+                    transparent: true, 
+                    opacity: 0.8 
+                });
+                const water = new THREE.Mesh(waterGeometry, waterMaterial);
+                water.position.y = -1;
+                waterLevel3DScene.add(water);
+
+                // Water surface animation
+                const surfaceGeometry = new THREE.CircleGeometry(7.5, 32);
+                const surfaceMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x87ceeb, 
+                    transparent: true, 
+                    opacity: 0.6 
+                });
+                const surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+                surface.rotation.x = -Math.PI / 2;
+                surface.position.y = 1;
+                waterLevel3DScene.add(surface);
+
+                // Water level indicator
+                const indicatorGeometry = new THREE.BoxGeometry(0.2, 8, 0.2);
+                const indicatorMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+                const indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
+                indicator.position.set(10, 0, 0);
+                waterLevel3DScene.add(indicator);
+
+                // Level markers
+                for (let i = -4; i <= 4; i += 2) {
+                    const markerGeometry = new THREE.BoxGeometry(1, 0.1, 0.1);
+                    const markerMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+                    const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+                    marker.position.set(10.5, i, 0);
+                    waterLevel3DScene.add(marker);
+                }
+
+                waterLevel3DCamera.position.set(15, 5, 15);
+                waterLevel3DCamera.lookAt(0, 0, 0);
+
+                animate3DWaterLevel();
+            }
+
+            // CORRECTION: Fonction de nettoyage 3D
+            function cleanup3DWaterLevel() {
+                if (waterLevel3DAnimationId) {
+                    cancelAnimationFrame(waterLevel3DAnimationId);
+                    waterLevel3DAnimationId = null;
+                }
+                if (waterLevel3DRenderer) {
+                    waterLevel3DRenderer.dispose();
+                    waterLevel3DRenderer = null;
+                }
+                if (waterLevel3DScene) {
+                    waterLevel3DScene = null;
+                }
+                if (waterLevel3DCamera) {
+                    waterLevel3DCamera = null;
+                }
+            }
+
+            function animate3DWaterLevel() {
+                waterLevel3DAnimationId = requestAnimationFrame(animate3DWaterLevel);
+                
+                if (waterLevel3DScene && waterLevel3DRenderer && waterLevel3DCamera) {
+                    // Rotate the scene slowly
+                    waterLevel3DScene.rotation.y += 0.005;
+                    
+                    // Animate water surface with subtle waves
+                    const time = Date.now() * 0.001;
+                    const surface = waterLevel3DScene.children.find(child => 
+                        child.geometry && child.geometry.type === 'CircleGeometry'
+                    );
+                    if (surface) {
+                        surface.position.y = 1 + Math.sin(time) * 0.1;
+                        surface.material.opacity = 0.6 + Math.sin(time * 2) * 0.1;
+                    }
+                    
+                    waterLevel3DRenderer.render(waterLevel3DScene, waterLevel3DCamera);
+                }
+            }
+
+            // Real-time data handling - No more simulation
+            function updateSequenceOrder(newSequence) {
+                if (!state.connected) return;
+                
+                state.automationSequence = newSequence;
+                
+                // Emit sequence update to server
+                socket.emit('update_automation_sequence', {
+                    sequence: newSequence
+                });
+                
+                showNotification('Séquence d\'automation mise à jour');
+            }
+
+            // Device discovery via Socket.IO
+            function startDeviceScan() {
+                if (state.isScanning || !state.connected) return;
+                
+                state.isScanning = true;
+                updateScanButton();
+                updateScanStatus();
+                clearDevicesGrid();
+                
+                // Emit scan request to server
+                socket.emit('scan_devices');
+                showNotification('Recherche d\'appareils ESP32 en cours...');
+            }
+
+            // Manual device registration
+            function addManualDevice() {
+                const ipInput = document.getElementById('manual-ip');
+                const nameInput = document.getElementById('manual-name');
+                
+                const deviceIP = ipInput.value.trim();
+                const deviceName = nameInput.value.trim();
+                
+                if (!deviceIP) {
+                    showNotification('Veuillez entrer une adresse IP');
+                    return;
+                }
+                
+                // Basic IP validation
+                const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+                if (!ipPattern.test(deviceIP)) {
+                    showNotification('Adresse IP invalide');
+                    return;
+                }
+                
+                if (!state.connected) {
+                    showNotification('Pas de connexion au serveur');
+                    return;
+                }
+                
+                // Send manual registration to server
+                const API_BASE = SERVER_URL || '';
+                fetch(`${API_BASE}/api/register-device`, {                 method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        deviceIP: deviceIP,
+                        deviceName: deviceName
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Appareil ajouté avec succès !');
+                        // Clear inputs
+                        ipInput.value = '';
+                        nameInput.value = '';
+                        // Device will appear via Socket.IO device_discovered event
+                    } else {
+                        showNotification('Erreur: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    showNotification('Erreur de connexion au serveur');
+                    console.error('Manual registration error:', error);
+                });
+            }
+
+            function connectDevice(deviceId) {
+                const device = state.discoveredDevices.find(d => d.id === deviceId);
+                if (!device || device.status !== 'available') return;
+                
+                device.status = 'connecting';
+                updateDeviceCard(device);
+                
+                // Emit connection request to server
+                socket.emit('connect_device', {
+                    deviceId: device.id,
+                    deviceInfo: device
+                });
+            }
+
+            // Valve control via Socket.IO
+            function changeValveState(id, etat) {
+                if (!state.connected) {
+                    showNotification('Pas de connexion au serveur');
+                    return;
+                }
+
+                const vanneIndex = state.currentStats.vannesStates.findIndex(v => v.id === id);
+                if (vanneIndex === -1) {
+                    showNotification('Erreur: Vanne non trouvée');
+                    return;
+                }
+
+                // Emit valve control to server
+                socket.emit('control_valve', {
+                    valveId: id,
+                    action: etat
+                });
+                
+                showNotification(`Commande envoyée: ${getValveName(id)} ${etat === 'ouvert' ? 'ouvrir' : 'fermer'}`);
+            }
+
+            function toggleGlobalAutomation() {
+                if (!state.connected) {
+                    showNotification('Pas de connexion au serveur');
+                    return;
+                }
+
+                const newGlobalState = !state.globalAutomationActive;
+                
+                // Emit automation toggle to server
+                socket.emit('toggle_automation', {
+                    active: newGlobalState,
+                    automationSequence: state.automationSequence,
+                    valveStates: state.currentStats.vannesStates
+                });
+            }
+
+            function toggleValveAutomation(id, automated) {
+                if (!state.connected) {
+                    showNotification('Pas de connexion au serveur');
+                    return;
+                }
+
+                const vanneIndex = state.currentStats.vannesStates.findIndex(v => v.id === id);
+                if (vanneIndex !== -1) {
+                    state.currentStats.vannesStates[vanneIndex].automated = automated;
+                    
+                    // Emit valve automation change to server
+                    socket.emit('update_valve_automation', {
+                        valveId: id,
+                        automated: automated,
+                        automationLimit: state.currentStats.vannesStates[vanneIndex].automationLimit
+                    });
+                    
+                    updateUI();
+                }
+            }
+
+            function setValveLimit(id, limit) {
+                const validLimit = validateValveLimit(limit);
+                if (validLimit === false) return;
+                
+                const vanneIndex = state.currentStats.vannesStates.findIndex(v => v.id === id);
+                if (vanneIndex !== -1) {
+                    state.currentStats.vannesStates[vanneIndex].automationLimit = validLimit;
+                    
+                    // Emit limit change to server
+                    if (state.connected) {
+                        socket.emit('update_valve_limit', {
+                            valveId: id,
+                            limit: validLimit
+                        });
+                    }
+                    
+                    updateUI();
+                    showNotification(`Limite mise à jour: ${validLimit}L pour ${getValveName(id)}`);
+                }
+            }
+
+            function removeValve(id) {
+                const valve = valveDefinitions.find(v => v.id === id);
+                if (!valve) return;
+
+                const actionType = valve.esp32Id ? "déconnecter" : "supprimer";
+                const confirmationMessage = `Êtes-vous sûr de vouloir ${actionType} la vanne "${valve.nom}" ?`;
+
+                if (confirm(confirmationMessage)) {
+                    // Vérifier si la vanne est active dans l'automation
+                    if (state.globalAutomationActive && state.activeAutomatedVanneId === id) {
+                        alert('Impossible de supprimer cette vanne : elle est actuellement active dans l\'automation.');
+                        return;
+                    }
+
+                    // Emit removal request to server
+                    if (state.connected) {
+                        socket.emit('remove_valve', {
+                            valveId: id,
+                            esp32Id: valve.esp32Id
+                        });
+                    } else {
+                        showNotification('Pas de connexion au serveur');
+                    }
+                }
+            }
+
+            function updateScanButton() {
+                const button = document.getElementById('scan-button');
+                if (state.isScanning) {
+                    button.textContent = '⏳ Recherche en cours...';
+                    button.className = 'scan-button scanning';
+                    button.disabled = true;
+                } else {
+                    button.textContent = '🔍 Rechercher des Appareils';
+                    button.className = 'scan-button';
+                    button.disabled = false;
+                }
+            }
+
+            function updateScanStatus(devicesFound = null) {
+                const statusDiv = document.getElementById('scan-status');
+                
+                if (state.isScanning) {
+                    statusDiv.className = 'scan-status scanning';
+                    statusDiv.innerHTML = `
+                        <div class="scan-spinner"></div>
+                        <div class="scan-text">Recherche d'appareils ESP32 en cours...</div>
+                        <div class="scan-subtext">Analyse du réseau local pour détecter les modules compatibles</div>
+                    `;
+                } else if (devicesFound !== null) {
+                    statusDiv.className = 'scan-status';
+                    if (devicesFound > 0) {
+                        statusDiv.innerHTML = `
+                            <div class="scan-text">✅ Recherche terminée</div>
+                            <div class="scan-subtext">${devicesFound} appareil(s) ESP32 détecté(s) sur le réseau</div>
+                        `;
+                    } else {
+                        statusDiv.innerHTML = `
+                            <div class="scan-text">❌ Aucun appareil trouvé</div>
+                            <div class="scan-subtext">Vérifiez que vos modules ESP32 sont allumés et connectés au réseau</div>
+                        `;
+                    }
+                } else {
+                    statusDiv.className = 'scan-status';
+                    statusDiv.innerHTML = `
+                        <div class="scan-text">Aucune recherche en cours</div>
+                        <div class="scan-subtext">Cliquez sur "Rechercher des Appareils" pour détecter les modules ESP32 disponibles</div>
+                    `;
+                }
+            }
+
+            function clearDevicesGrid() {
+                document.getElementById('devices-grid').innerHTML = '';
+            }
+
+            function updateDevicesGrid(devices) {
+                const grid = document.getElementById('devices-grid');
+                grid.innerHTML = '';
+                
+                devices.forEach(device => {
+                    const deviceCard = createDeviceCard(device);
+                    grid.appendChild(deviceCard);
+                });
+            }
+
+            function createDeviceCard(device) {
+                const card = document.createElement('div');
+                card.className = `device-card ${device.status}`;
+                card.id = `device-${device.id}`;
+                
+                const signalBars = createSignalBars(device.signal);
+                const components = device.components.map(comp => 
+                    `<div class="component-item"><span class="component-check">✅</span>${comp}</div>`
+                ).join('');
+                
+                card.innerHTML = `
+                    <div class="device-header">
+                        <div class="device-name">${device.name}</div>
+                        <div class="device-status-badge ${device.status}">
+                            ${device.status === 'available' ? 'Disponible' : 
+                            device.status === 'connecting' ? 'Connexion' : 'Connecté'}
+                        </div>
+                    </div>
+                    
+                    <div class="device-info">
+                        <div class="device-info-row">
+                            <span class="device-info-label">Adresse IP:</span>
+                            <span class="device-info-value">${device.ip}</span>
+                        </div>
+                        <div class="device-info-row">
+                            <span class="device-info-label">Adresse MAC:</span>
+                            <span class="device-info-value">${device.mac}</span>
+                        </div>
+                        <div class="device-info-row">
+                            <span class="device-info-label">Signal WiFi:</span>
+                            <div class="signal-strength">
+                                <div class="signal-bars">${signalBars}</div>
+                                <span class="signal-percentage">${device.signal}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="device-components">
+                        ${components}
+                    </div>
+                    
+                    <div class="device-actions">
+                        <button class="action-button connect" 
+                                onclick="connectDevice('${device.id}')"
+                                ${device.status !== 'available' ? 'disabled' : ''}>
+                            ${device.status === 'available' ? 'Connecter' : 
+                            device.status === 'connecting' ? 'Connexion...' : 'Connecté'}
+                        </button>
+                        <button class="action-button ignore" 
+                                onclick="ignoreDevice('${device.id}')"
+                                ${device.status !== 'available' ? 'disabled' : ''}>
+                            Ignorer
+                        </button>
+                    </div>
+                `;
+                
+                return card;
+            }
+
+            function createSignalBars(signalStrength) {
+                const bars = [];
+                const activeCount = Math.ceil(signalStrength / 25);
+                
+                for (let i = 1; i <= 4; i++) {
+                    const isActive = i <= activeCount;
+                    bars.push(`<div class="signal-bar ${isActive ? 'active' : ''}"></div>`);
+                }
+                
+                return bars.join('');
+            }
+
+            // Remove old simulation and HTTP-based functions - replaced with Socket.IO
+
+        function connectDevice(deviceId) {
+            const device = state.discoveredDevices.find(d => d.id === deviceId);
+            if (!device || device.status !== 'available') return;
+            
+            device.status = 'connecting';
+            updateDeviceCard(device);
+            
+            // Emit connection request to server
+            socket.emit('connect_device', {
+                deviceId: device.id,
+                deviceInfo: device
+            });
+        }
+
+            function ignoreDevice(deviceId) {
+                const device = state.discoveredDevices.find(d => d.id === deviceId);
+                if (!device) return;
+                
+                const deviceCard = document.getElementById(`device-${deviceId}`);
+                if (deviceCard) {
+                    deviceCard.style.opacity = '0.5';
+                    deviceCard.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        deviceCard.remove();
+                    }, 300);
+                }
+                
+                showDiscoveryMessage('success', `${device.name} ignoré.`);
+            }
+
+            function updateDeviceCard(device) {
+                const existingCard = document.getElementById(`device-${device.id}`);
+                if (existingCard) {
+                    const newCard = createDeviceCard(device);
+                    existingCard.replaceWith(newCard);
+                }
+            }
+
+            function showDiscoveryMessage(type, message) {
+                const messageDiv = document.getElementById('discovery-message');
+                messageDiv.className = `message ${type}`;
+                messageDiv.textContent = message;
+                messageDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    messageDiv.classList.add('hidden');
+                }, 5000);
+            }
+
+            // Simulation functions
+      
+    
+            // UI Update functions
+            function updateUI() {
+                updateResourceDateTime();
+                updateStats();
+                updateValvesDisplay();
+                updateAlerts();
+                updateCharts();
+                updateHistoryTable();
+                updateValveManagement();
+                updateSequenceEditor();
+            }
+
+            function updateResourceDateTime() {
+                const now = new Date();
+                const resourceDateTime = document.getElementById('resource-datetime');
+                const dailyDateTime = document.getElementById('daily-datetime');
+                const distributedDateTime = document.getElementById('distributed-datetime');
+                
+                if (resourceDateTime) {
+                    resourceDateTime.textContent = formatDateTime(now);
+                }
+                if (dailyDateTime) {
+                    dailyDateTime.textContent = formatDateTime(now);
+                }
+                if (distributedDateTime) {
+                    distributedDateTime.textContent = formatDateTime(now);
+                }
+
+                // Update water percentage with slight variation
+                const waterPercentageElement = document.getElementById('water-percentage');
+                const capacityUsedElement = document.getElementById('capacity-used');
+                if (waterPercentageElement) {
+                    const basePercentage = 85;
+                    const variation = Math.sin(Date.now() * 0.0001) * 2; // ±2% variation
+                    const currentPercentage = Math.round((basePercentage + variation) * 10) / 10;
+                    waterPercentageElement.innerHTML = `${currentPercentage}<span class="stock-item-unit">%</span>`;
+                    
+                    // Update capacity used as well for consistency
+                    if (capacityUsedElement) {
+                        capacityUsedElement.textContent = `${currentPercentage}%`;
+                    }
+                    
+                    // Change color based on percentage
+                    if (currentPercentage < 70) {
+                        waterPercentageElement.style.color = '#dc2626'; // Red for low
+                        if (capacityUsedElement) capacityUsedElement.style.color = '#dc2626';
+                    } else if (currentPercentage < 85) {
+                        waterPercentageElement.style.color = '#f59e0b'; // Orange for medium
+                        if (capacityUsedElement) capacityUsedElement.style.color = '#f59e0b';
+                    } else {
+                        waterPercentageElement.style.color = 'inherit'; // Default white
+                        if (capacityUsedElement) capacityUsedElement.style.color = 'inherit';
+                    }
+                }
+            }
+
+            function updateStats() {
+                // Dashboard stats
+                const flowElement = document.getElementById('current-flow');
+                const volumeElement = document.getElementById('total-volume');
+                
+                if (flowElement) {
+                    const isFlowAlert = state.currentStats.debitActuel < ALERT_MIN_DEBIT && 
+                        state.currentStats.vannesStates.some(v => v.etat === 'ouvert');
+                    
+                    flowElement.className = isFlowAlert ? 'value alert' : 'value';
+                    flowElement.innerHTML = `${state.currentStats.debitActuel.toFixed(1)} <span class="unit">L/min</span>`;
+                }
+                
+                if (volumeElement) {
+                    volumeElement.innerHTML = `${state.currentStats.totalDistribue.toFixed(1)} <span class="unit">L</span>`;
+                }
+
+                // Resource page stats
+                const totalValvesElement = document.getElementById('total-valves');
+                const openValvesElement = document.getElementById('open-valves');
+                
+                if (totalValvesElement) {
+                    totalValvesElement.textContent = valveDefinitions.length;
+                }
+                
+                if (openValvesElement) {
+                    const openCount = state.currentStats.vannesStates.filter(v => v.etat === 'ouvert').length;
+                    openValvesElement.textContent = openCount;
+                }
+            }
+
+            function updateValvesDisplay() {
+                const container = document.getElementById('valves-display');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                valveDefinitions.forEach(valve => {
+                    const vanneState = state.currentStats.vannesStates.find(v => v.id === valve.id);
+                    const etat = vanneState?.etat ?? 'ferme';
+                    const styleClass = getEtatStyle(etat);
+                    
+                    const valveCard = document.createElement('div');
+                    valveCard.className = `valve-card ${styleClass}`;
+                    valveCard.innerHTML = `
+                        <div class="valve-badge ${styleClass}">${valve.nom}</div>
+                        <div class="valve-light ${styleClass}"></div>
+                        <span style="font-size: 12px; text-transform: capitalize; font-weight: 500; color: #374151; margin-bottom: 4px;">${etat}</span>
+                    `;
+                    
+                    container.appendChild(valveCard);
+                });
+            }
+
+            function updateAlerts() {
+                const alertsContainer = document.getElementById('alerts-container');
+                if (!alertsContainer) return;
+                
+                alertsContainer.innerHTML = '';
+                
+                const uniqueAlerts = [...new Set(state.currentStats.alerts)];
+                uniqueAlerts.forEach(alert => {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert';
+                    alertDiv.innerHTML = `<span>⚠️</span><span>${alert}</span>`;
+                    alertsContainer.appendChild(alertDiv);
+                });
+
+                // Show notification for automation alerts
+                const automatedAlert = state.currentStats.alerts.find(alert => alert.includes('[Auto]'));
+                if (automatedAlert) {
+                    showNotification(automatedAlert.replace('[Auto]', 'Automation:'));
+                } else if (state.currentStats.alerts.length > 0) {
+                    showNotification(state.currentStats.alerts[state.currentStats.alerts.length - 1]);
+                }
+            }
+
+            function updateCharts() {
+                // Dashboard charts
+                const chartData = state.historique.map(d => ({
+                    x: formatTime(new Date(d.timestamp)),
+                    y: d.debit
+                }));
+
+                const volumeData = state.historique.map(d => ({
+                    x: formatTime(new Date(d.timestamp)),
+                    y: d.volume
+                }));
+
+                if (flowChart) {
+                    flowChart.data.labels = chartData.map(d => d.x);
+                    flowChart.data.datasets[0].data = chartData.map(d => d.y);
+                    flowChart.update('none');
+                }
+
+                if (volumeChart) {
+                    volumeChart.data.labels = volumeData.map(d => d.x);
+                    volumeChart.data.datasets[0].data = volumeData.map(d => d.y);
+                    volumeChart.update('none');
+                }
+
+                // Resource page charts
+                updateResourceCharts();
+            }
+
+            function updateResourceCharts() {
+                // Generate mock data for cumulative volume chart
+                const cumulativeData = [];
+                for (let i = 0; i < 5; i++) {
+                    cumulativeData.push(4.5 + Math.random() * 1 - 0.5);
+                }
+
+                if (cumulativeVolumeChart) {
+                    cumulativeVolumeChart.data.datasets[0].data = cumulativeData;
+                    cumulativeVolumeChart.update('none');
+                }
+
+                // Generate mock data for distributed volume chart
+                const distributedData = {
+                    vanne1: [4.3, 2.5, 3.5, 4.5],
+                    vanne7: [2.4, 4.4, 1.8, 2.8],
+                    vanne12: [2, 2, 3, 5]
+                };
+
+                if (distributedVolumeChart) {
+                    distributedVolumeChart.data.datasets[0].data = distributedData.vanne1;
+                    distributedVolumeChart.data.datasets[1].data = distributedData.vanne7;
+                    distributedVolumeChart.data.datasets[2].data = distributedData.vanne12;
+                    distributedVolumeChart.update('none');
+                }
+            }
+
+            function updateValveManagement() {
+                const container = document.getElementById('valve-management-grid');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                state.currentStats.vannesStates.forEach(vanneState => {
+                    const vanneInfo = valveDefinitions.find(v => v.id === vanneState.id);
+                    if (!vanneInfo) return;
+                    
+                    const styleClass = getEtatStyle(vanneState.etat);
+                    const isCurrentlyAutomated = state.globalAutomationActive && vanneState.automated;
+                    const isActiveAutomated = isCurrentlyAutomated && state.activeAutomatedVanneId === vanneState.id;
+                    
+                    const card = document.createElement('div');
+                    card.className = `valve-management-card ${styleClass}`;
+                    
+                    card.innerHTML = `
+                        <h3>${vanneInfo.nom}</h3>
+                        
+                        <div class="valve-status">
+                            <span class="light ${styleClass}"></span>
+                            <span class="text">État: ${vanneState.etat}</span>
+                        </div>
+                        
+                        ${isActiveAutomated ? `<p style="color: #1d4ed8; font-weight: bold; margin-bottom: 8px;">Volume actuel: ${vanneState.currentAutomatedVolume.toFixed(1)} L</p>` : ''}
+                        
+                        <div class="automation-section">
+                            <label>Automation:</label>
+                            <input type="checkbox" ${vanneState.automated ? 'checked' : ''} 
+                                onchange="toggleValveAutomation(${vanneState.id}, this.checked)">
+                            <span class="status">${vanneState.automated ? 'Activé' : 'Désactivé'}</span>
+                        </div>
+                        
+                        <div class="limit-section">
+                            <label>Limite de Volume (L):</label>
+                            <input type="number" value="${vanneState.automationLimit}" min="1" max="10000"
+                                ${!vanneState.automated ? 'disabled' : ''}
+                                onchange="setValveLimit(${vanneState.id}, this.value)">
+                        </div>
+                        
+                        <div class="valve-buttons">
+                            <button class="valve-button open" 
+                                    ${vanneState.etat === 'ouvert' || isCurrentlyAutomated ? 'disabled' : ''}
+                                    onclick="changeValveState(${vanneState.id}, 'ouvert')">
+                                Ouvrir
+                            </button>
+                            <button class="valve-button close"
+                                    ${vanneState.etat === 'ferme' || isCurrentlyAutomated ? 'disabled' : ''}
+                                    onclick="changeValveState(${vanneState.id}, 'ferme')">
+                                Fermer
+                            </button>
+                        </div>
+                        
+                        <button class="delete-icon" 
+                                ${isCurrentlyAutomated ? 'disabled' : ''}
+                                onclick="removeValve(${vanneState.id})"
+                                title="Supprimer cette vanne">
+                            🗑️
+                        </button>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+                
+                // Update automation toggle
+                const automationToggle = document.getElementById('automation-toggle');
+                const activeValveDisplay = document.getElementById('active-valve-display');
+                
+                if (automationToggle) {
+                    if (state.globalAutomationActive) {
+                        automationToggle.className = 'automation-toggle active';
+                        automationToggle.textContent = 'Activé';
+                        
+                        if (state.activeAutomatedVanneId && activeValveDisplay) {
+                            activeValveDisplay.textContent = `Vanne Active: ${getValveName(state.activeAutomatedVanneId)}`;
+                            activeValveDisplay.classList.remove('hidden');
+                        } else if (activeValveDisplay) {
+                            activeValveDisplay.classList.add('hidden');
+                        }
+                    } else {
+                        automationToggle.className = 'automation-toggle inactive';
+                        automationToggle.textContent = 'Désactivé';
+                        if (activeValveDisplay) {
+                            activeValveDisplay.classList.add('hidden');
+                        }
+                    }
+                }
+            }
+
+            function updateSequenceEditor() {
+                const container = document.getElementById('sequence-grid');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                state.automationSequence.forEach((id, idx) => {
+                    const valve = valveDefinitions.find(v => v.id === id);
+                    if (!valve) return;
+                    
+                    const isAutomated = state.currentStats.vannesStates.find(v => v.id === id)?.automated;
+                    
+                    const item = document.createElement('div');
+                    item.className = `sequence-item ${isAutomated ? 'automated' : 'not-automated'}`;
+                    item.draggable = true;
+                    item.dataset.id = id;
+                    
+                    item.innerHTML = `
+                        <span class="name">${valve.nom}</span>
+                        <span class="number">#${idx + 1}</span>
+                        ${!isAutomated ? '<span class="status">Désactivé</span>' : ''}
+                    `;
+
+                    item.addEventListener('dragstart', handleDragStart);
+                    item.addEventListener('dragover', handleDragOver);
+                    item.addEventListener('drop', handleDrop);
+                    
+                    container.appendChild(item);
+                });
+            }
+
+            function updateHistoryTable() {
+                const tbody = document.getElementById('history-tbody');
+                if (!tbody) return;
+                
+                tbody.innerHTML = '';
+                
+                if (state.historique.length === 0) {
+                    const row = tbody.insertRow();
+                    const cell = row.insertCell();
+                    cell.colSpan = 4;
+                    cell.style.textAlign = 'center';
+                    cell.style.padding = '16px';
+                    cell.style.color = '#9ca3af';
+                    cell.textContent = 'Aucune donnée pour la période choisie.';
+                    return;
+                }
+
+                // Show last 10 entries
+                const recentHistory = state.historique.slice(-10).reverse();
+                
+                recentHistory.forEach((point, idx) => {
+                    const row = tbody.insertRow();
+                    row.style.backgroundColor = idx % 2 === 0 ? 'white' : '#f9fafb';
+                    
+                    const timeCell = row.insertCell();
+                    timeCell.innerHTML = `${formatTime(new Date(point.timestamp))} <span style="color: #9ca3af;">${formatDate(new Date(point.timestamp))}</span>`;
+                    
+                    const debitCell = row.insertCell();
+                    debitCell.textContent = point.debit.toFixed(1);
+                    if (point.debit < ALERT_MIN_DEBIT) {
+                        debitCell.style.color = '#dc2626';
+                        debitCell.style.fontWeight = 'bold';
+                    }
+                    
+                    const volumeCell = row.insertCell();
+                    volumeCell.textContent = point.volume.toFixed(1);
+                    
+                    const vannesCell = row.insertCell();
+                    const vannesDiv = document.createElement('div');
+                    vannesDiv.style.display = 'flex';
+                    vannesDiv.style.flexDirection = 'column';
+                    vannesDiv.style.gap = '4px';
+                    
+                    point.vannes.forEach(v => {
+                        const vanneInfo = valveDefinitions.find(item => item.id === v.id);
+                        const styleClass = getEtatStyle(v.etat);
+                        
+                        const vanneDiv = document.createElement('div');
+                        vanneDiv.style.display = 'flex';
+                        vanneDiv.style.alignItems = 'center';
+                        vanneDiv.style.gap = '8px';
+                        
+                        vanneDiv.innerHTML = `
+                            <span class="valve-light ${styleClass}" style="width: 12px; height: 12px;"></span>
+                            <span style="font-size: 12px; color: #374151;">
+                                ${vanneInfo?.nom}: <span style="font-weight: 500; text-transform: capitalize; color: ${v.etat === 'ouvert' ? '#166534' : v.etat === 'ferme' ? '#dc2626' : '#ea580c'};">${v.etat}</span>
+                            </span>
+                        `;
+                        vannesDiv.appendChild(vanneDiv);
+                    });
+                    
+                    vannesCell.appendChild(vannesDiv);
+                });
+            }
+
+            // Navigation functions
+            function showResourcePage() {
+                document.getElementById('resource-page').classList.remove('hidden');
+                document.getElementById('dashboard-page').classList.add('hidden');
+                document.getElementById('valve-page').classList.add('hidden');
+                document.getElementById('resource-btn').classList.add('active');
+                document.getElementById('dashboard-btn').classList.remove('active');
+                document.getElementById('valve-btn').classList.remove('active');
+                
+                // Start 3D animation if not running
+                if (!waterLevel3DAnimationId) {
+                    setTimeout(() => init3DWaterLevel(), 100);
+                }
+            }
+
+            function showDashboard() {
+                document.getElementById('resource-page').classList.add('hidden');
+                document.getElementById('dashboard-page').classList.remove('hidden');
+                document.getElementById('valve-page').classList.add('hidden');
+                document.getElementById('resource-btn').classList.remove('active');
+                document.getElementById('dashboard-btn').classList.add('active');
+                document.getElementById('valve-btn').classList.remove('active');
+                
+                // Stop 3D animation to save resources
+                cleanup3DWaterLevel();
+            }
+
+            function showValveManagement() {
+                document.getElementById('resource-page').classList.add('hidden');
+                document.getElementById('dashboard-page').classList.add('hidden');
+                document.getElementById('valve-page').classList.remove('hidden');
+                document.getElementById('resource-btn').classList.remove('active');
+                document.getElementById('dashboard-btn').classList.remove('active');
+                document.getElementById('valve-btn').classList.add('active');
+                
+                // Stop 3D animation to save resources
+                cleanup3DWaterLevel();
+            }
+
+            // CORRECTION: Valve control functions avec gestion d'erreurs
+     
+      
+            function toggleValveAutomation(id, automated) {
+                const vanneIndex = state.currentStats.vannesStates.findIndex(v => v.id === id);
+                if (vanneIndex !== -1) {
+                    state.currentStats.vannesStates[vanneIndex].automated = automated;
+                    
+                    let alerts = [...state.currentStats.alerts];
+                    if (state.globalAutomationActive && state.activeAutomatedVanneId === id && !automated) {
+                        const currentVanneIndex = state.automationSequence.indexOf(id);
+                        let nextVanneFound = false;
+                        let newActiveAutomatedVanneId = null;
+                        let newGlobalAutomationActive = state.globalAutomationActive;
+
+                        const tempVannes = state.currentStats.vannesStates.map(v => 
+                            v.id === id ? { ...v, etat: "ferme", currentAutomatedVolume: 0 } : v
+                        );
+                        alerts.push(`[Automation] Vanne ${getValveName(id)} retirée de l'automation.`);
+
+                        for (let i = 1; i <= state.automationSequence.length; i++) {
+                            const candidateIndex = (currentVanneIndex + i) % state.automationSequence.length;
+                            const candidateVanneId = state.automationSequence[candidateIndex];
+                            const candidateVanneState = tempVannes.find(v => v.id === candidateVanneId);
+
+                            if (candidateVanneState && candidateVanneState.automated) {
+                                candidateVanneState.etat = "ouvert";
+                                candidateVanneState.currentAutomatedVolume = 0;
+                                newActiveAutomatedVanneId = candidateVanneState.id;
+                                alerts.push(`[Automation] Vanne ${getValveName(candidateVanneId)} ouverte (séquence suite à désactivation).`);
+                                nextVanneFound = true;
+                                break;
+                            }
+                        }
+                        if (!nextVanneFound) {
+                            newGlobalAutomationActive = false;
+                            newActiveAutomatedVanneId = null;
+                            alerts.push(`[Automation] Aucune autre vanne automatisée disponible. Automation globale désactivée.`);
+                        }
+                        
+                        state.currentStats.vannesStates = tempVannes;
+                        state.globalAutomationActive = newGlobalAutomationActive;
+                        state.activeAutomatedVanneId = newActiveAutomatedVanneId;
+                    }
+                    
+                    state.currentStats.alerts = alerts;
+                    updateUI();
+                }
+            }
+
+            // CORRECTION: Validation des limites avec gestion d'erreurs
+            function setValveLimit(id, limit) {
+                const validLimit = validateValveLimit(limit);
+                if (validLimit === false) return;
+                
+                const vanneIndex = state.currentStats.vannesStates.findIndex(v => v.id === id);
+                if (vanneIndex !== -1) {
+                    state.currentStats.vannesStates[vanneIndex].automationLimit = validLimit;
+                    updateUI();
+                    showNotification(`Limite mise à jour: ${validLimit}L pour ${getValveName(id)}`);
+                }
+            }
+
+            // Drag and drop for sequence editor
+            let draggedItem = null;
+
+            function handleDragStart(e) {
+                draggedItem = this;
+                e.dataTransfer.effectAllowed = "move";
+            }
+
+            function handleDragOver(e) {
+                e.preventDefault();
+            }
+
+            function handleDrop(e) {
+                e.preventDefault();
+                if (draggedItem === null || draggedItem === this) return;
+
+                const draggedId = parseInt(draggedItem.dataset.id);
+                const dropId = parseInt(this.dataset.id);
+
+                const newSequence = [...state.automationSequence];
+                const draggedIndex = newSequence.indexOf(draggedId);
+                const dropIndex = newSequence.indexOf(dropId);
+
+                newSequence.splice(draggedIndex, 1);
+                newSequence.splice(dropIndex, 0, draggedId);
+
+                state.automationSequence = newSequence;
+                draggedItem = null;
+                
+                // Update sequence on server
+                updateSequenceOrder(newSequence);
+                updateUI();
+            }
+
+            // Modal functions - SUPPRIMÉ : Retour au système confirm() natif
+            function removeValve(id) {
+                const valve = valveDefinitions.find(v => v.id === id);
+                if (!valve) return;
+
+                const actionType = valve.esp32Id ? "déconnecter" : "supprimer";
+                const confirmationMessage = `Êtes-vous sûr de vouloir ${actionType} la vanne "${valve.nom}" ?`;
+
+                if (confirm(confirmationMessage)) {
+                    // Vérifier si la vanne est active dans l'automation
+                    if (state.globalAutomationActive && state.activeAutomatedVanneId === id) {
+                        alert('Impossible de supprimer cette vanne : elle est actuellement active dans l\'automation.');
+                        return;
+                    }
+
+                    // Gérer les appareils ESP32 connectés AVANT suppression
+                    if (valve.esp32Id) {
+                        const device = state.discoveredDevices.find(d => d.id === valve.esp32Id);
+                        if (device) {
+                            device.status = 'available';
+                        }
+                    }
+
+                    // Supprimer la vanne des définitions
+                    valveDefinitions = valveDefinitions.filter(v => v.id !== id);
+
+                    // Supprimer la vanne des états
+                    state.currentStats.vannesStates = state.currentStats.vannesStates.filter(v => v.id !== id);
+
+                    // Supprimer la vanne de la séquence d'automation
+                    state.automationSequence = state.automationSequence.filter(valveId => valveId !== id);
+
+                    // Gérer l'automation globale si nécessaire
+                    if (state.globalAutomationActive) {
+                        const remainingAutomatedValves = state.currentStats.vannesStates.filter(v => v.automated);
+                        if (remainingAutomatedValves.length === 0) {
+                            state.globalAutomationActive = false;
+                            state.activeAutomatedVanneId = null;
+                            state.currentStats.alerts.push('Automation globale désactivée : aucune vanne automatisée restante.');
+                        }
+                    }
+
+                    // Ajouter une alerte
+                    state.currentStats.alerts.push(`La vanne "${valve.nom}" a été ${actionType}e avec succès.`);
+
+                    // Mettre à jour l'interface
+                    updateUI();
+                    showNotification(`La vanne "${valve.nom}" a été ${actionType}e avec succès.`);
+                }
+            }
+
+            // Notification functions
+            function showNotification(message) {
+                const notification = document.getElementById('notification');
+                const notificationText = document.getElementById('notification-text');
+                if (notification && notificationText) {
+                    notificationText.textContent = message;
+                    notification.classList.remove('hidden');
+                    setTimeout(hideNotification, 5000);
+                }
+            }
+
+            function hideNotification() {
+                const notification = document.getElementById('notification');
+                if (notification) {
+                    notification.classList.add('hidden');
+                }
+            }
+
+            // Export function
+            function exportHistoryCSV() {
+                const csv = state.historique.map(point => ({
+                    Date: new Date(point.timestamp).toLocaleString(),
+                    'Débit (L/min)': point.debit,
+                    'Volume (L)': point.volume,
+                    Vannes: point.vannes.map(v => `${getValveName(v.id)}:${v.etat}`).join(' | ')
+                }));
+                downloadCSV(csv, 'Historique_debit_volume');
+            }
+
+            function downloadCSV(data, filename) {
+                if (data.length === 0) {
+                    showNotification('Aucune donnée à exporter');
+                    return;
+                }
+                
+                const headers = Object.keys(data[0] || {}).join(',');
+                const csvContent = data.map(row =>
+                    Object.values(row).map(value =>
+                        typeof value === 'string' && value.includes(',') ? `"${value}"` : value
+                    ).join(',')
+                ).join('\n');
+                const csv = headers + '\n' + csvContent;
+
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename + ".csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showNotification('Export CSV téléchargé avec succès');
+            }
+
+            // Date controls
+            function updateDateRange() {
+                const periode = document.getElementById('periode-select');
+                const startDate = document.getElementById('date-start');
+                const endDate = document.getElementById('date-end');
+                
+                if (!periode || !startDate || !endDate) return;
+                
+                let start = new Date();
+                if (periode.value === 'jour') start = new Date(Date.now() - 24 * 3600 * 1000);
+                else if (periode.value === 'semaine') start = new Date(Date.now() - 7 * 24 * 3600 * 1000);
+                else if (periode.value === 'mois') start = new Date(Date.now() - 30 * 24 * 3600 * 1000);
+                
+                startDate.value = start.toISOString().substring(0, 10);
+                endDate.value = new Date().toISOString().substring(0, 10);
+            }
+
+            // CORRECTION: Initialize charts avec gestion d'erreurs
+            function initializeCharts() {
+                try {
+                    // Dashboard charts
+                    const flowCtx = document.getElementById('flow-chart');
+                    const volumeCtx = document.getElementById('volume-chart');
+
+                    if (flowCtx) {
+                        flowChart = new Chart(flowCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: [],
+                                datasets: [{
+                                    label: 'Débit (L/min)',
+                                    data: [],
+                                    borderColor: '#059669',
+                                    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                                    borderWidth: 2,
+                                    fill: false,
+                                    tension: 0.1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom' }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+
+                    if (volumeCtx) {
+                        volumeChart = new Chart(volumeCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: [],
+                                datasets: [{
+                                    label: 'Volume (L)',
+                                    data: [],
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                                    borderWidth: 2,
+                                    fill: true,
+                                    tension: 0.1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom' }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+
+                    // Resource page charts
+                    initializeResourceCharts();
+                } catch (error) {
+                    console.error('Erreur lors de l\'initialisation des graphiques:', error);
+                    showNotification('Erreur lors du chargement des graphiques');
+                }
+            }
+
+            function initializeResourceCharts() {
+                try {
+                    const cumulativeCtx = document.getElementById('cumulative-volume-chart');
+                    const distributedCtx = document.getElementById('distributed-volume-chart');
+
+                    if (cumulativeCtx) {
+                        cumulativeVolumeChart = new Chart(cumulativeCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['Point 1', 'Point 2', 'Point 3', 'Point 4', 'Point 5'],
+                                datasets: [{
+                                    label: 'Volume cumulé',
+                                    data: [4.5, 2.8, 3.8, 4.8],
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    borderWidth: 3,
+                                    fill: true,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true, max: 6 }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom' }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+
+                    if (distributedCtx) {
+                        distributedVolumeChart = new Chart(distributedCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['4.3', '2.5', '3.5', '4.5'],
+                                datasets: [{
+                                    label: 'Vanne 1',
+                                    data: [4.3, 2.5, 3.5, 4.5],
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }, {
+                                    label: 'Vanne 7',
+                                    data: [2.4, 4.4, 1.8, 2.8],
+                                    borderColor: '#f97316',
+                                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }, {
+                                    label: 'Vanne 12',
+                                    data: [2, 2, 3, 5],
+                                    borderColor: '#64748b',
+                                    backgroundColor: 'rgba(100, 116, 139, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true, max: 6 }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom' }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+
+                    // Initialize new charts
+                    initializeNewResourceCharts();
+                } catch (error) {
+                    console.error('Erreur lors de l\'initialisation des graphiques de ressources:', error);
+                }
+            }
+
+            function initializeNewResourceCharts() {
+                try {
+                    // Water Level Chart (dark theme)
+                    const waterLevelCtx = document.getElementById('water-level-chart');
+                    if (waterLevelCtx) {
+                        waterLevelChart = new Chart(waterLevelCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['', '', '', ''],
+                                datasets: [{
+                                    label: 'Cote du plan d\'eau (m NGCI)',
+                                    data: [4, 2.5, 3, 4.5],
+                                    borderColor: '#60a5fa',
+                                    backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                                    borderWidth: 3,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true, max: 5, grid: { color: '#4b5563' }, ticks: { color: '#9ca3af' } }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom', labels: { color: '#e5e7eb' } }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+
+                    // Inflow Chart (blue theme)
+                    const inflowCtx = document.getElementById('inflow-chart');
+                    if (inflowCtx) {
+                        inflowChart = new Chart(inflowCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['4.3', '2.5', '3.5', '4.5'],
+                                datasets: [{
+                                    label: 'Débit entrant (m3/s)',
+                                    data: [4.3, 2.5, 3.5, 4.5],
+                                    borderColor: '#ffffff',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    borderWidth: 3,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true, max: 5, grid: { color: '#1e40af' }, ticks: { color: '#bfdbfe' } }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom', labels: { color: '#ffffff' } }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+
+                    // Primary Channels Chart (dark theme)
+                    const primaryChannelsCtx = document.getElementById('primary-channels-chart');
+                    if (primaryChannelsCtx) {
+                        primaryChannelsChart = new Chart(primaryChannelsCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['', '', '', ''],
+                                datasets: [{
+                                    label: 'Canaux primaire_2 (m3/s)',
+                                    data: [4.5, 3.8, 2.5, 3.2],
+                                    borderColor: '#60a5fa',
+                                    backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }, {
+                                    label: 'Canaux primaire_2',
+                                    data: [4.2, 4.5, 3.8, 2.8],
+                                    borderColor: '#f97316',
+                                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true, max: 5, grid: { color: '#4b5563' }, ticks: { color: '#9ca3af' } }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom', labels: { color: '#e5e7eb' } }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+
+                    // Water Stock Chart (area chart)
+                    const waterStockCtx = document.getElementById('water-stock-chart');
+                    if (waterStockCtx) {
+                        waterStockChart = new Chart(waterStockCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['1', '2', '3', '4', '5'],
+                                datasets: [{
+                                    label: 'Stock d\'eau disponible (M3)',
+                                    data: [2, 2.5, 3.5, 4.8, 5],
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                                    borderWidth: 2,
+                                    fill: true,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: true, grid: { display: false } },
+                                    y: { beginAtZero: true, max: 6 }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom' }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+
+                    // Rainfall Chart
+                    const rainfallCtx = document.getElementById('rainfall-chart');
+                    if (rainfallCtx) {
+                        rainfallChart = new Chart(rainfallCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['', '', '', ''],
+                                datasets: [{
+                                    label: 'Pluviométrie (mm)',
+                                    data: [4.5, 2.8, 4.2, 4.8],
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true, max: 6 }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom' }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+
+                    // Inflow Forecast Chart
+                    const inflowForecastCtx = document.getElementById('inflow-forecast-chart');
+                    if (inflowForecastCtx) {
+                        inflowForecastChart = new Chart(inflowForecastCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['4.3', '2.5', '3.5', '4.5'],
+                                datasets: [{
+                                    label: 'Prévision_24 h',
+                                    data: [4.3, 2.5, 3.5, 4.5],
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }, {
+                                    label: 'Prévision_3 jours',
+                                    data: [2.4, 4.4, 1.8, 2.8],
+                                    borderColor: '#f97316',
+                                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }, {
+                                    label: 'Prévision_1 mois',
+                                    data: [2, 2, 3, 5],
+                                    borderColor: '#64748b',
+                                    backgroundColor: 'rgba(100, 116, 139, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true, max: 6 }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom' }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+
+                    // Stock Forecast Chart
+                    const stockForecastCtx = document.getElementById('stock-forecast-chart');
+                    if (stockForecastCtx) {
+                        stockForecastChart = new Chart(stockForecastCtx.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: ['4.3', '2.5', '3.5', '4.5'],
+                                datasets: [{
+                                    label: 'Prévision_24 h',
+                                    data: [4.3, 2.5, 3.5, 4.5],
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }, {
+                                    label: 'Prévision_3 jours',
+                                    data: [2.4, 4.4, 1.8, 2.8],
+                                    borderColor: '#f97316',
+                                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }, {
+                                    label: 'Prévision_1 mois',
+                                    data: [2, 2, 3, 5],
+                                    borderColor: '#64748b',
+                                    backgroundColor: 'rgba(100, 116, 139, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { display: false },
+                                    y: { beginAtZero: true, max: 6 }
+                                },
+                                plugins: {
+                                    legend: { display: true, position: 'bottom' }
+                                },
+                                animation: false
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Erreur lors de l\'initialisation des nouveaux graphiques:', error);
+                }
+            }
+
+            // Initialize application with Socket.IO
+            function initializeApp() {
+                try {
+                    console.log('Initialisation de l\'application Socket.IO...');
+                    
+                    // Initialize charts
+                    initializeCharts();
+                    
+                    // Set up navigation
+                    document.getElementById('resource-btn').addEventListener('click', showResourcePage);
+                    document.getElementById('dashboard-btn').addEventListener('click', showDashboard);
+                    document.getElementById('valve-btn').addEventListener('click', showValveManagement);
+                    
+                    // Set up date controls
+                    const periodeSelect = document.getElementById('periode-select');
+                    if (periodeSelect) {
+                        periodeSelect.addEventListener('change', updateDateRange);
+                        updateDateRange();
+                    }
+                    
+                    // Initialize 3D water level (since resource page is default)
+                    setTimeout(() => {
+                        init3DWaterLevel();
+                    }, 100);
+                    
+                    // Initial UI update (will be updated when server data arrives)
+                    updateUI();
+                    
+                    console.log('Application initialisée avec succès');
+                    
+                } catch (error) {
+                    console.error('Erreur lors de l\'initialisation:', error);
+                    showNotification('Erreur lors de l\'initialisation du système');
+                }
+            }
+
+            // Start the application when page loads
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        </script>
+
+    </body>
+    </html>
