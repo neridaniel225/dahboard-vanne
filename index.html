@@ -1914,6 +1914,19 @@
             state.connected = false;
              showNotification('Impossible de se connecter au serveur');
             });
+
+               
+            socket.on('disconnect', () => {
+             console.log('Socket déconnecté du serveur');
+             if (state.isScanning) {
+             state.isScanning = false;
+             updateScanButton();
+            updateScanStatus(0);
+        }
+                
+    state.connected = false;
+    showNotification('Connexion serveur perdue');
+});
             // CORRECTION: Fonction d'initialisation des états des vannes
             function initializeValveStates() {
                 // Data will be loaded from server via Socket.IO
@@ -2113,19 +2126,37 @@
             }
 
             // Device discovery via Socket.IO
-            function startDeviceScan() {
-                if (state.isScanning || !state.connected) return;
-                
-                state.isScanning = true;
-                updateScanButton();
-                updateScanStatus();
-                clearDevicesGrid();
-                
-                // Emit scan request to server
-                socket.emit('scan_devices');
-                showNotification('Recherche d\'appareils ESP32 en cours...');
+           function startDeviceScan() {
+              if (state.isScanning || !state.connected) return;
+    
+               console.log('Démarrage scan appareils...');
+               state.isScanning = true;
+               updateScanButton();
+               updateScanStatus();
+               clearDevicesGrid();
+    
+    // Demande scan au serveur (HTTPS discovery)
+    socket.emit('scan_devices');
+    showNotification('Recherche appareils ESP32 (HTTPS automatique)...');
+    
+    // Timeout pour arrêter le scan
+    setTimeout(() => {
+        if (state.isScanning) {
+            state.isScanning = false;
+            updateScanButton();
+            updateScanStatus(state.discoveredDevices.length);
+            
+            if (state.discoveredDevices.length === 0) {
+                showNotification('Aucun appareil trouvé. Vérifiez que vos ESP32 sont connectés au WiFi.');
+            } else {
+                showNotification(`${state.discoveredDevices.length} appareil(s) ESP32 découvert(s)`);
             }
+        }
+    }, 15000); // 15 secondes timeout
+}
 
+
+            
             // Manual device registration
             function addManualDevice() {
                 const ipInput = document.getElementById('manual-ip');
