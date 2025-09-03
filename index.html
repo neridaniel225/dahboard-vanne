@@ -1696,9 +1696,18 @@
       
         <script>
             // Socket.IO connection - UPDATE THIS URL WITH YOUR RENDER DEPconst SERVER_URL = 'https://your-app-name.onrender.com';LOYMENT
-            const SERVER_URL = 'https://water-management-server.onrender.com';
-            const socket = io(SERVER_URL);
-            
+            // Configuration de l'URL du serveur - CORRIGÉ
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const SERVER_URL = isLocalhost ? 'http://localhost:3000' : 'https://water-management-server.onrender.com';
+       
+        console.log('Connexion à:', SERVER_URL);
+        const socket = io(SERVER_URL, {
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            timeout: 20000
+        });
             // Constants
             const ALERT_MIN_DEBIT = 5;
             const DEFAULT_AUTOMATION_LIMIT = 250;
@@ -1739,14 +1748,29 @@
             let waterLevel3DCamera = null;
             let waterLevel3DAnimationId = null;
 
-            // Socket.IO Event Handlers
             socket.on('connect', () => {
-                console.log('Connected to server');
-                state.connected = true;
-                showNotification('Connecté au serveur');
-                
-               
-            });
+            console.log('✅ Connecté au serveur:', SERVER_URL);
+            state.connected = true;
+            showNotification('Connecté au serveur');
+            
+            // Demander les données initiales
+            socket.emit('get_initial_data');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('❌ Erreur de connexion:', error.message);
+            state.connected = false;
+            showNotification('Impossible de se connecter au serveur. Tentative de reconnexion...');
+            
+            // Tentative de reconnexion alternative après un délai
+            setTimeout(() => {
+                if (!state.connected) {
+                    console.log('Tentative de reconnexion...');
+                    socket.connect();
+                }
+            }, 5000);
+        });
+            
 
             socket.on('disconnect', () => {
                 console.log('Disconnected from server');
