@@ -899,7 +899,7 @@
                 color: #dc2626;
             }
 
-            /* ESP32 Discovery Styles */
+            /*vanne  Discovery Styles */
             .discovery-section {
                 background: white;
                 border: 1px solid #e2e8f0;
@@ -1654,12 +1654,12 @@
                         <div id="sequence-grid" class="sequence-grid"></div>
                     </div>
 
-                    <!-- ESP32 Discovery Section -->
+                    <!--vanne  Discovery Section -->
                     <div class="discovery-section">
                         <div class="discovery-header">
                             <div class="discovery-title">
                                 <div class="discovery-icon">📡</div>
-                                Découverte d'Appareils ESP32
+                                Découverte d'Appareilsvanne 
                             </div>
                             <button id="scan-button" class="scan-button" onclick="startDeviceScan()">
                                 🔍 Rechercher des Appareils
@@ -1667,23 +1667,23 @@
                         </div>
                         
                         <p class="discovery-description">
-                            Recherchez automatiquement des modules ESP32 équipés d'électrovannes et de capteurs de débit sur votre réseau. 
+                            Recherchez automatiquement des modulesvanne  équipés d'électrovannes et de capteurs de débit sur votre réseau. 
                             Le système détectera les appareils compatibles et vous permettra de les ajouter facilement à votre installation.
                         </p>
 
                         <div id="scan-status" class="scan-status">
                             <div class="scan-text">Aucune recherche en cours</div>
-                            <div class="scan-subtext">Cliquez sur "Rechercher des Appareils" pour détecter les modules ESP32 disponibles</div>
+                            <div class="scan-subtext">Cliquez sur "Rechercher des Appareils" pour détecter les modulesvanne  disponibles</div>
                         </div>
 
                         <!-- Manual Device Registration -->
                         <div class="manual-registration">
                             <h3>Ajout Manuel d'Appareil</h3>
-                            <p>Si la découverte automatique ne fonctionne pas (réseaux différents), ajoutez un ESP32 manuellement :</p>
+                            <p>Si la découverte automatique ne fonctionne pas (réseaux différents), ajoutez unvanne  manuellement :</p>
                             <div class="manual-form">
                                 <input type="text" id="manual-ip" placeholder="Adresse IP (ex: 192.168.1.100)" />
                                 <input type="text" id="manual-name" placeholder="Nom (optionnel)" />
-                                <button onclick="addManualDevice()" class="scan-button">Ajouter ESP32</button>
+                                <button onclick="addManualDevice()" class="scan-button">Ajoutervanne </button>
                             </div>
                         </div>
 
@@ -1871,9 +1871,9 @@
                 updateDevicesGrid(devices);
                 
                 if (devices.length > 0) {
-                    showNotification(`${devices.length} appareil(s) ESP32 détecté(s)`);
+                    showNotification(`${devices.length} appareil(s)vanne  détecté(s)`);
                 } else {
-                    showNotification('Aucun appareil ESP32 trouvé sur le réseau');
+                    showNotification('Aucun appareilvanne  trouvé sur le réseau');
                 }
             });
 
@@ -1885,7 +1885,7 @@
                     const newValve = {
                         id: data.valveId,
                         nom: data.nom,
-                        esp32Id: data.deviceId,
+                       vanne Id: data.deviceId,
                         location: data.location,
                         type: data.type,
                         capacity: data.capacity,
@@ -2215,7 +2215,7 @@ socket.on('device_status_update', (data) => {
     
     // Demande scan au serveur (HTTPS discovery)
     socket.emit('scan_devices');
-    showNotification('Recherche appareils ESP32 (HTTPS automatique)...');
+    showNotification('Recherche appareilsvanne  (HTTPS automatique)...');
     
     // Timeout pour arrêter le scan
     setTimeout(() => {
@@ -2225,9 +2225,9 @@ socket.on('device_status_update', (data) => {
             updateScanStatus(state.discoveredDevices.length);
             
             if (state.discoveredDevices.length === 0) {
-                showNotification('Aucun appareil trouvé. Vérifiez que vos ESP32 sont connectés au WiFi.');
+                showNotification('Aucun appareil trouvé. Vérifiez que vosvanne  sont connectés au WiFi.');
             } else {
-                showNotification(`${state.discoveredDevices.length} appareil(s) ESP32 découvert(s)`);
+                showNotification(`${state.discoveredDevices.length} appareil(s)vanne  découvert(s)`);
             }
         }
     }, 15000); // 15 secondes timeout
@@ -2414,10 +2414,10 @@ function removeValve(id) {
             deleteButton.textContent = '⏳';
         }
 
-        console.log(`Envoi suppression vanne ${id} avec ESP32 ID: ${valve.esp32Id}`);
+        console.log(`Envoi suppression vanne ${id} avecvanne  ID: ${valve.esp32Id}`);
         socket.emit('remove_valve', {
             valveId: id,
-            esp32Id: valve.esp32Id
+           vanne Id: valve.esp32Id
         });
 
         // Timeout de sécurité
@@ -2451,7 +2451,7 @@ function removeValve(id) {
                     statusDiv.className = 'scan-status scanning';
                     statusDiv.innerHTML = `
                         <div class="scan-spinner"></div>
-                        <div class="scan-text">Recherche d'appareils ESP32 en cours...</div>
+                        <div class="scan-text">Recherche d'appareilsvanne  en cours...</div>
                         <div class="scan-subtext">Analyse du réseau local pour détecter les modules compatibles</div>
                     `;
                 } else if (devicesFound !== null) {
@@ -2459,19 +2459,19 @@ function removeValve(id) {
                     if (devicesFound > 0) {
                         statusDiv.innerHTML = `
                             <div class="scan-text">✅ Recherche terminée</div>
-                            <div class="scan-subtext">${devicesFound} appareil(s) ESP32 détecté(s) sur le réseau</div>
+                            <div class="scan-subtext">${devicesFound} appareil(s)vanne  détecté(s) sur le réseau</div>
                         `;
                     } else {
                         statusDiv.innerHTML = `
                             <div class="scan-text">❌ Aucun appareil trouvé</div>
-                            <div class="scan-subtext">Vérifiez que vos modules ESP32 sont allumés et connectés au réseau</div>
+                            <div class="scan-subtext">Vérifiez que vos modulesvanne  sont allumés et connectés au réseau</div>
                         `;
                     }
                 } else {
                     statusDiv.className = 'scan-status';
                     statusDiv.innerHTML = `
                         <div class="scan-text">Aucune recherche en cours</div>
-                        <div class="scan-subtext">Cliquez sur "Rechercher des Appareils" pour détecter les modules ESP32 disponibles</div>
+                        <div class="scan-subtext">Cliquez sur "Rechercher des Appareils" pour détecter les modulesvanne  disponibles</div>
                     `;
                 }
             }
@@ -3151,7 +3151,7 @@ function removeValve(id) {
                         return;
                     }
 
-                    // Gérer les appareils ESP32 connectés AVANT suppression
+                    // Gérer les appareilsvanne  connectés AVANT suppression
                     if (valve.esp32Id) {
                         const device = state.discoveredDevices.find(d => d.id === valve.esp32Id);
                         if (device) {
