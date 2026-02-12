@@ -1352,6 +1352,12 @@
                 <button id="resource-btn" class="nav-button active">État de la Ressource</button>
                 <button id="dashboard-btn" class="nav-button">État des vannes </button>
                 <button id="valve-btn" class="nav-button">Gestion des Vannes</button>
+                <button id="map-btn" class="nav-button"> Map </button>
+                <button id="choix-btn" class="nav-button"> Choix des paramètres </button> 
+                <button id="Analyse-btn" class="nav-button">Analyse </button>
+
+
+
             </nav>
 
             <main class="main-content">
@@ -1698,8 +1704,9 @@
             // Socket.IO connection - UPDATE THIS URL WITH YOUR RENDER DEPconst SERVER_URL = 'https://your-app-name.onrender.com';LOYMENT
             // Configuration de l'URL du serveur - CORRIGÉ
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const SERVER_URL = isLocalhost ? 'http://localhost:3000' : 'https://water-management-server.onrender.com';
-       
+        
+        const SERVER_URL = 'http://localhost:3000';
+
         console.log('Connexion à:', SERVER_URL);
         const socket = io(SERVER_URL, {
             transports: ['websocket', 'polling'],
@@ -1749,13 +1756,13 @@
             let waterLevel3DAnimationId = null;
 
             socket.on('connect', () => {
-            console.log('✅ Connecté au serveur:', SERVER_URL);
-            state.connected = true;
-            showNotification('Connecté au serveur');
-            
-            // Demander les données initiales
-            socket.emit('get_initial_data');
-        });
+    console.log('✅ Connecté au serveur:', SERVER_URL);
+    state.connected = true;
+    showNotification('Connecté au serveur');
+    
+    // Demander les données initiales - CORRECTION
+    socket.emit('get_initial_data');
+});
 
         socket.on('connect_error', (error) => {
             console.error('❌ Erreur de connexion:', error.message);
@@ -1951,6 +1958,53 @@
     state.connected = false;
     showNotification('Connexion serveur perdue');
 });
+
+// Ajoutez après les autres event handlers
+socket.on('device_status_update', (data) => {
+    console.log('Device status update:', data);
+    
+    const device = state.discoveredDevices.find(d => d.id === data.deviceId);
+    if (device) {
+        device.status = data.status;
+        updateDeviceCard(device);
+        
+        if (data.status === 'available') {
+            showNotification(`ESP32 ${device.name} est maintenant disponible pour reconnexion`);
+        }
+    }
+});
+
+     socket.on('valve_removed', (data) => {
+    console.log('Valve removed response:', data);
+    
+    // Réactiver le bouton de suppression
+    const deleteButtons = document.querySelectorAll('.delete-icon');
+    deleteButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.textContent = '🗑️';
+    });
+    
+    if (data.success) {
+        // Supprimer la vanne des données locales
+        valveDefinitions = valveDefinitions.filter(v => v.id !== data.valveId);
+        state.currentStats.vannesStates = state.currentStats.vannesStates.filter(v => v.id !== data.valveId);
+        state.automationSequence = state.automationSequence.filter(id => id !== data.valveId);
+        
+        // Mettre à jour le statut de l'appareil
+        const device = state.discoveredDevices.find(d => d.id === data.deviceId);
+        if (device) {
+            device.status = 'available';
+            updateDeviceCard(device);
+        }
+        
+        updateUI();
+        showNotification('Vanne supprimée avec succès');
+    } else {
+        showNotification('Erreur lors de la suppression: ' + (data.error || 'Erreur inconnue'));
+    }
+});
+
+
             // CORRECTION: Fonction d'initialisation des états des vannes
             function initializeValveStates() {
                 // Data will be loaded from server via Socket.IO
@@ -2181,61 +2235,61 @@
 
 
             
-            // Manual device registration
-            function addManualDevice() {
-                const ipInput = document.getElementById('manual-ip');
-                const nameInput = document.getElementById('manual-name');
-                
-                const deviceIP = ipInput.value.trim();
-                const deviceName = nameInput.value.trim();
-                
-                if (!deviceIP) {
-                    showNotification('Veuillez entrer une adresse IP');
-                    return;
-                }
-                
-                // Basic IP validation
-                const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
-                if (!ipPattern.test(deviceIP)) {
-                    showNotification('Adresse IP invalide');
-                    return;
-                }
-                
-                if (!state.connected) {
-                    showNotification('Pas de connexion au serveur');
-                    return;
-                }
-                
-                // Send manual registration to server
-                const API_BASE = SERVER_URL || '';
-                fetch(`${API_BASE}/api/register-device`, {                 method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        deviceIP: deviceIP,
-                        deviceName: deviceName
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification('Appareil ajouté avec succès !');
-                        // Clear inputs
-                        ipInput.value = '';
-                        nameInput.value = '';
-                        // Device will appear via Socket.IO device_discovered event
-                    } else {
-                        showNotification('Erreur: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    showNotification('Erreur de connexion au serveur');
-                    console.error('Manual registration error:', error);
-                });
-            }
+function addManualDevice() {
+    const ipInput = document.getElementById('manual-ip');
+    const nameInput = document.getElementById('manual-name');
+    
+    const deviceIP = ipInput.value.trim();
+    const deviceName = nameInput.value.trim();
+    
+    if (!deviceIP) {
+        showNotification('Veuillez entrer une adresse IP');
+        return;
+    }
+    
+    // Basic IP validation
+    const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+    if (!ipPattern.test(deviceIP)) {
+        showNotification('Adresse IP invalide');
+        return;
+    }
+    
+    if (!state.connected) {
+        showNotification('Pas de connexion au serveur');
+        return;
+    }
+    
+    // Send manual registration to server
+    fetch(`${SERVER_URL}/api/register-device`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            deviceIP: deviceIP,
+            deviceName: deviceName
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Appareil ajouté avec succès !');
+            // Clear inputs
+            ipInput.value = '';
+            nameInput.value = '';
+            // Device will appear via Socket.IO device_discovered event
+        } else {
+            showNotification('Erreur: ' + data.error);
+        }
+    })
+    .catch(error => {
+        showNotification('Erreur de connexion au serveur');
+        console.error('Manual registration error:', error);
+    });
+}
+   
 
-            function connectDevice(deviceId) {
+function connectDevice(deviceId) {
                 const device = state.discoveredDevices.find(d => d.id === deviceId);
                 if (!device || device.status !== 'available') return;
                 
@@ -2329,31 +2383,53 @@
                 }
             }
 
-            function removeValve(id) {
-                const valve = valveDefinitions.find(v => v.id === id);
-                if (!valve) return;
+// REMPLACER la fonction removeValve actuelle par :
+function removeValve(id) {
+    const valve = valveDefinitions.find(v => v.id === id);
+    if (!valve) {
+        console.error('Vanne non trouvée:', id);
+        showNotification('Erreur: Vanne non trouvée');
+        return;
+    }
 
-                const actionType = valve.esp32Id ? "déconnecter" : "supprimer";
-                const confirmationMessage = `Êtes-vous sûr de vouloir ${actionType} la vanne "${valve.nom}" ?`;
+    console.log('Tentative suppression vanne:', valve);
+    const actionType = valve.esp32Id ? "déconnecter" : "supprimer";
+    const confirmationMessage = `Êtes-vous sûr de vouloir ${actionType} la vanne "${valve.nom}" ?`;
 
-                if (confirm(confirmationMessage)) {
-                    // Vérifier si la vanne est active dans l'automation
-                    if (state.globalAutomationActive && state.activeAutomatedVanneId === id) {
-                        alert('Impossible de supprimer cette vanne : elle est actuellement active dans l\'automation.');
-                        return;
-                    }
+    if (confirm(confirmationMessage)) {
+        if (state.globalAutomationActive && state.activeAutomatedVanneId === id) {
+            alert('Impossible de supprimer cette vanne : elle est actuellement active dans l\'automation.');
+            return;
+        }
 
-                    // Emit removal request to server
-                    if (state.connected) {
-                        socket.emit('remove_valve', {
-                            valveId: id,
-                            esp32Id: valve.esp32Id
-                        });
-                    } else {
-                        showNotification('Pas de connexion au serveur');
-                    }
-                }
+        if (!state.connected) {
+            showNotification('Pas de connexion au serveur');
+            return;
+        }
+
+        // Indicateur visuel de suppression en cours
+        const deleteButton = document.querySelector(`[onclick="removeValve(${id})"]`);
+        if (deleteButton) {
+            deleteButton.disabled = true;
+            deleteButton.textContent = '⏳';
+        }
+
+        console.log(`Envoi suppression vanne ${id} avec ESP32 ID: ${valve.esp32Id}`);
+        socket.emit('remove_valve', {
+            valveId: id,
+            esp32Id: valve.esp32Id
+        });
+
+        // Timeout de sécurité
+        setTimeout(() => {
+            if (deleteButton) {
+                deleteButton.disabled = false;
+                deleteButton.textContent = '🗑️';
             }
+        }, 10000);
+    }
+}
+
 
             function updateScanButton() {
                 const button = document.getElementById('scan-button');
@@ -2920,7 +2996,11 @@
                 document.getElementById('resource-btn').classList.add('active');
                 document.getElementById('dashboard-btn').classList.remove('active');
                 document.getElementById('valve-btn').classList.remove('active');
-                
+                document.getElementById('map-btn').classList.remove('active');
+                document.getElementById('choix-btn').classList.remove('active');
+                document.getElementById('Analyse-btn').classList.remove('active');
+
+
                 // Start 3D animation if not running
                 if (!waterLevel3DAnimationId) {
                     setTimeout(() => init3DWaterLevel(), 100);
@@ -2934,7 +3014,10 @@
                 document.getElementById('resource-btn').classList.remove('active');
                 document.getElementById('dashboard-btn').classList.add('active');
                 document.getElementById('valve-btn').classList.remove('active');
-                
+                document.getElementById('map-btn').classList.remove('active');
+                document.getElementById('choix-btn').classList.remove('active');
+                document.getElementById('Analyse-btn').classList.remove('active');
+
                 // Stop 3D animation to save resources
                 cleanup3DWaterLevel();
             }
@@ -2946,6 +3029,11 @@
                 document.getElementById('resource-btn').classList.remove('active');
                 document.getElementById('dashboard-btn').classList.remove('active');
                 document.getElementById('valve-btn').classList.add('active');
+                document.getElementById('valve-btn').classList.remove('active');
+                document.getElementById('map-btn').classList.remove('active');
+                document.getElementById('choix-btn').classList.remove('active');
+                document.getElementById('Analyse-btn').classList.remove('active');
+
                 
                 // Stop 3D animation to save resources
                 cleanup3DWaterLevel();
@@ -3603,7 +3691,10 @@
                     document.getElementById('resource-btn').addEventListener('click', showResourcePage);
                     document.getElementById('dashboard-btn').addEventListener('click', showDashboard);
                     document.getElementById('valve-btn').addEventListener('click', showValveManagement);
-                    
+                    document.getElementById('map-btn').classList.remove('active');
+                    document.getElementById('choix-btn').classList.remove('active');
+                    document.getElementById('Analyse-btn').classList.remove('active');
+
                     // Set up date controls
                     const periodeSelect = document.getElementById('periode-select');
                     if (periodeSelect) {
