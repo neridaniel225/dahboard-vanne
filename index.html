@@ -899,7 +899,7 @@
                 color: #dc2626;
             }
 
-            /*vanne  Discovery Styles */
+            /* ESP32  Discovery Styles */
             .discovery-section {
                 background: white;
                 border: 1px solid #e2e8f0;
@@ -1350,8 +1350,8 @@
             <nav class="sidebar">
                 <h2>Menu</h2>
                 <button id="resource-btn" class="nav-button active">État de la Ressource</button>
-                <button id="dashboard-btn" class="nav-button">État des vannes </button>
-                <button id="valve-btn" class="nav-button">Gestion des Vannes</button>
+                <button id="dashboard-btn" class="nav-button">État des  ESP32s </button>
+                <button id="valve-btn" class="nav-button">Gestion des  ESP32s</button>
                 <button id="map-btn" class="nav-button"> Map </button>
                 <button id="choix-btn" class="nav-button"> Choix des paramètres </button> 
                 <button id="Analyse-btn" class="nav-button">Analyse </button>
@@ -1412,11 +1412,11 @@
 
                     <div class="valve-status-grid">
                         <div class="valve-status-card">
-                            <div class="valve-status-title">Nombre de vannes installées :</div>
+                            <div class="valve-status-title">Nombre de  ESP32s installées :</div>
                             <div class="valve-status-number" id="total-valves">14</div>
                         </div>
                         <div class="valve-status-card">
-                            <div class="valve-status-title">Nombre de vannes ouvertes :</div>
+                            <div class="valve-status-title">Nombre de  ESP32s ouvertes :</div>
                             <div class="valve-status-number" id="open-valves">3</div>
                         </div>
                     </div>
@@ -1447,7 +1447,7 @@
                         <div class="chart-card">
                             <div class="chart-header">
                                 <span class="chart-title">Volume d'eau distribué</span>
-                                <div class="chart-subtitle">Par vanne</div>
+                                <div class="chart-subtitle">Par  ESP32</div>
                             </div>
                             <div class="chart-wrapper">
                                 <canvas id="distributed-volume-chart" class="chart-canvas"></canvas>
@@ -1581,7 +1581,7 @@
 
                     <div class="stats-grid">
                         <div class="stats-card">
-                            <div class="title">État des Vannes</div>
+                            <div class="title">État des  ESP32s</div>
                             <div id="valves-display" class="valve-container"></div>
                         </div>
                     </div>
@@ -1615,7 +1615,7 @@
                                         <th>Heure</th>
                                         <th>Débit (L/min)</th>
                                         <th>Volume (L)</th>
-                                        <th>Vannes</th>
+                                        <th> ESP32s</th>
                                     </tr>
                                 </thead>
                                 <tbody id="history-tbody"></tbody>
@@ -1631,7 +1631,7 @@
                 <!-- Valve Management Page -->
                 <div id="valve-page" class="page hidden">
                     <div class="page-header">
-                        <h1>Gestion des Vannes</h1>
+                        <h1>Gestion des  ESP32s</h1>
                         <p>Contrôlez l'état de chaque casier de distribution et configurez l'automation.</p>
                     </div>
 
@@ -1649,17 +1649,17 @@
                     <div id="valve-management-grid" class="valve-management-grid"></div>
 
                     <div class="sequence-editor">
-                        <h2>Ordre d'activation automatique des vannes</h2>
-                        <p>Glissez/déposez pour réorganiser l'ordre dans lequel les vannes s'activent automatiquement.</p>
+                        <h2>Ordre d'activation automatique des  ESP32s</h2>
+                        <p>Glissez/déposez pour réorganiser l'ordre dans lequel les  ESP32s s'activent automatiquement.</p>
                         <div id="sequence-grid" class="sequence-grid"></div>
                     </div>
 
-                    <!--vanne  Discovery Section -->
+                    <!-- ESP32  Discovery Section -->
                     <div class="discovery-section">
                         <div class="discovery-header">
                             <div class="discovery-title">
                                 <div class="discovery-icon">📡</div>
-                                Découverte d'Appareilsvanne 
+                                Découverte d'Appareils ESP32 
                             </div>
                             <button id="scan-button" class="scan-button" onclick="startDeviceScan()">
                                 🔍 Rechercher des Appareils
@@ -1667,23 +1667,23 @@
                         </div>
                         
                         <p class="discovery-description">
-                            Recherchez automatiquement des modulesvanne  équipés d'électrovannes et de capteurs de débit sur votre réseau. 
+                            Recherchez automatiquement des modules ESP32  équipés d'électro ESP32s et de capteurs de débit sur votre réseau. 
                             Le système détectera les appareils compatibles et vous permettra de les ajouter facilement à votre installation.
                         </p>
 
                         <div id="scan-status" class="scan-status">
                             <div class="scan-text">Aucune recherche en cours</div>
-                            <div class="scan-subtext">Cliquez sur "Rechercher des Appareils" pour détecter les modulesvanne  disponibles</div>
+                            <div class="scan-subtext">Cliquez sur "Rechercher des Appareils" pour détecter les modules ESP32  disponibles</div>
                         </div>
 
                         <!-- Manual Device Registration -->
                         <div class="manual-registration">
                             <h3>Ajout Manuel d'Appareil</h3>
-                            <p>Si la découverte automatique ne fonctionne pas (réseaux différents), ajoutez unvanne  manuellement :</p>
+                            <p>Si la découverte automatique ne fonctionne pas (réseaux différents), ajoutez un ESP32  manuellement :</p>
                             <div class="manual-form">
                                 <input type="text" id="manual-ip" placeholder="Adresse IP (ex: 192.168.1.100)" />
                                 <input type="text" id="manual-name" placeholder="Nom (optionnel)" />
-                                <button onclick="addManualDevice()" class="scan-button">Ajoutervanne </button>
+                                <button onclick="addManualDevice()" class="scan-button">Ajouter ESP32 </button>
                             </div>
                         </div>
 
@@ -1727,11 +1727,11 @@
                 currentStats: {
                     totalDistribue: 0,
                     debitActuel: 0,
-                    vannesStates: [],
+                     ESP32sStates: [],
                     alerts: []
                 },
                 globalAutomationActive: false,
-                activeAutomatedVanneId: null,
+                activeAutomated ESP32Id: null,
                 automationSequence: [],
                 discoveredDevices: [],
                 isScanning: false,
@@ -1795,7 +1795,7 @@
                 
                 // Load valve states
                 if (data.valveStates) {
-                    state.currentStats.vannesStates = data.valveStates;
+                    state.currentStats. ESP32sStates = data.valveStates;
                 }
                 
                 // Load automation sequence
@@ -1839,11 +1839,11 @@
             socket.on('valve_state_update', (data) => {
                 console.log('Valve state updated:', data);
                 
-                const valveIndex = state.currentStats.vannesStates.findIndex(v => v.id === data.valveId);
+                const valveIndex = state.currentStats. ESP32sStates.findIndex(v => v.id === data.valveId);
                 if (valveIndex !== -1) {
-                    state.currentStats.vannesStates[valveIndex].etat = data.etat;
+                    state.currentStats. ESP32sStates[valveIndex].etat = data.etat;
                     updateUI();
-                    showNotification(`Vanne ${getValveName(data.valveId)} ${data.etat === 'ouvert' ? 'ouverte' : 'fermée'}`);
+                    showNotification(` ESP32 ${getValveName(data.valveId)} ${data.etat === 'ouvert' ? 'ouverte' : 'fermée'}`);
                 }
             });
 
@@ -1851,7 +1851,7 @@
                 console.log('Automation update:', data);
                 
                 state.globalAutomationActive = data.active;
-                state.activeAutomatedVanneId = data.activeValveId;
+                state.activeAutomated ESP32Id = data.activeValveId;
                 
                 if (data.alert) {
                     state.currentStats.alerts.push(data.alert);
@@ -1871,9 +1871,9 @@
                 updateDevicesGrid(devices);
                 
                 if (devices.length > 0) {
-                    showNotification(`${devices.length} appareil(s)vanne  détecté(s)`);
+                    showNotification(`${devices.length} appareil(s) ESP32  détecté(s)`);
                 } else {
-                    showNotification('Aucun appareilvanne  trouvé sur le réseau');
+                    showNotification('Aucun appareil ESP32  trouvé sur le réseau');
                 }
             });
 
@@ -1885,7 +1885,7 @@
                     const newValve = {
                         id: data.valveId,
                         nom: data.nom,
-                       vanne Id: data.deviceId,
+                        ESP32 Id: data.deviceId,
                         location: data.location,
                         type: data.type,
                         capacity: data.capacity,
@@ -1905,7 +1905,7 @@
                     };
                     
                     valveDefinitions.push(newValve);
-                    state.currentStats.vannesStates.push(newValveState);
+                    state.currentStats. ESP32sStates.push(newValveState);
                     state.automationSequence.push(data.valveId);
                     
                     // Update device status in discovered devices
@@ -1985,9 +1985,9 @@ socket.on('device_status_update', (data) => {
     });
     
     if (data.success) {
-        // Supprimer la vanne des données locales
+        // Supprimer la  ESP32 des données locales
         valveDefinitions = valveDefinitions.filter(v => v.id !== data.valveId);
-        state.currentStats.vannesStates = state.currentStats.vannesStates.filter(v => v.id !== data.valveId);
+        state.currentStats. ESP32sStates = state.currentStats. ESP32sStates.filter(v => v.id !== data.valveId);
         state.automationSequence = state.automationSequence.filter(id => id !== data.valveId);
         
         // Mettre à jour le statut de l'appareil
@@ -1998,14 +1998,14 @@ socket.on('device_status_update', (data) => {
         }
         
         updateUI();
-        showNotification('Vanne supprimée avec succès');
+        showNotification(' ESP32 supprimée avec succès');
     } else {
         showNotification('Erreur lors de la suppression: ' + (data.error || 'Erreur inconnue'));
     }
 });
 
 
-            // CORRECTION: Fonction d'initialisation des états des vannes
+            // CORRECTION: Fonction d'initialisation des états des  ESP32s
             function initializeValveStates() {
                 // Data will be loaded from server via Socket.IO
                 // This function is kept for compatibility but not used for initialization
@@ -2049,7 +2049,7 @@ socket.on('device_status_update', (data) => {
             }
 
             function getValveName(id) {
-                return valveDefinitions.find(v => v.id === id)?.nom || `Vanne ${id}`;
+                return valveDefinitions.find(v => v.id === id)?.nom || ` ESP32 ${id}`;
             }
 
             function getEtatStyle(etat) {
@@ -2215,7 +2215,7 @@ socket.on('device_status_update', (data) => {
     
     // Demande scan au serveur (HTTPS discovery)
     socket.emit('scan_devices');
-    showNotification('Recherche appareilsvanne  (HTTPS automatique)...');
+    showNotification('Recherche appareils ESP32  (HTTPS automatique)...');
     
     // Timeout pour arrêter le scan
     setTimeout(() => {
@@ -2225,9 +2225,9 @@ socket.on('device_status_update', (data) => {
             updateScanStatus(state.discoveredDevices.length);
             
             if (state.discoveredDevices.length === 0) {
-                showNotification('Aucun appareil trouvé. Vérifiez que vosvanne  sont connectés au WiFi.');
+                showNotification('Aucun appareil trouvé. Vérifiez que vos ESP32  sont connectés au WiFi.');
             } else {
-                showNotification(`${state.discoveredDevices.length} appareil(s)vanne  découvert(s)`);
+                showNotification(`${state.discoveredDevices.length} appareil(s) ESP32  découvert(s)`);
             }
         }
     }, 15000); // 15 secondes timeout
@@ -2310,9 +2310,9 @@ function connectDevice(deviceId) {
                     return;
                 }
 
-                const vanneIndex = state.currentStats.vannesStates.findIndex(v => v.id === id);
-                if (vanneIndex === -1) {
-                    showNotification('Erreur: Vanne non trouvée');
+                const  ESP32Index = state.currentStats. ESP32sStates.findIndex(v => v.id === id);
+                if ( ESP32Index === -1) {
+                    showNotification('Erreur:  ESP32 non trouvée');
                     return;
                 }
 
@@ -2337,7 +2337,7 @@ function connectDevice(deviceId) {
                 socket.emit('toggle_automation', {
                     active: newGlobalState,
                     automationSequence: state.automationSequence,
-                    valveStates: state.currentStats.vannesStates
+                    valveStates: state.currentStats. ESP32sStates
                 });
             }
 
@@ -2347,15 +2347,15 @@ function connectDevice(deviceId) {
                     return;
                 }
 
-                const vanneIndex = state.currentStats.vannesStates.findIndex(v => v.id === id);
-                if (vanneIndex !== -1) {
-                    state.currentStats.vannesStates[vanneIndex].automated = automated;
+                const  ESP32Index = state.currentStats. ESP32sStates.findIndex(v => v.id === id);
+                if ( ESP32Index !== -1) {
+                    state.currentStats. ESP32sStates[ ESP32Index].automated = automated;
                     
                     // Emit valve automation change to server
                     socket.emit('update_valve_automation', {
                         valveId: id,
                         automated: automated,
-                        automationLimit: state.currentStats.vannesStates[vanneIndex].automationLimit
+                        automationLimit: state.currentStats. ESP32sStates[ ESP32Index].automationLimit
                     });
                     
                     updateUI();
@@ -2366,9 +2366,9 @@ function connectDevice(deviceId) {
                 const validLimit = validateValveLimit(limit);
                 if (validLimit === false) return;
                 
-                const vanneIndex = state.currentStats.vannesStates.findIndex(v => v.id === id);
-                if (vanneIndex !== -1) {
-                    state.currentStats.vannesStates[vanneIndex].automationLimit = validLimit;
+                const  ESP32Index = state.currentStats. ESP32sStates.findIndex(v => v.id === id);
+                if ( ESP32Index !== -1) {
+                    state.currentStats. ESP32sStates[ ESP32Index].automationLimit = validLimit;
                     
                     // Emit limit change to server
                     if (state.connected) {
@@ -2387,18 +2387,18 @@ function connectDevice(deviceId) {
 function removeValve(id) {
     const valve = valveDefinitions.find(v => v.id === id);
     if (!valve) {
-        console.error('Vanne non trouvée:', id);
-        showNotification('Erreur: Vanne non trouvée');
+        console.error(' ESP32 non trouvée:', id);
+        showNotification('Erreur:  ESP32 non trouvée');
         return;
     }
 
-    console.log('Tentative suppression vanne:', valve);
+    console.log('Tentative suppression  ESP32:', valve);
     const actionType = valve.esp32Id ? "déconnecter" : "supprimer";
-    const confirmationMessage = `Êtes-vous sûr de vouloir ${actionType} la vanne "${valve.nom}" ?`;
+    const confirmationMessage = `Êtes-vous sûr de vouloir ${actionType} la  ESP32 "${valve.nom}" ?`;
 
     if (confirm(confirmationMessage)) {
-        if (state.globalAutomationActive && state.activeAutomatedVanneId === id) {
-            alert('Impossible de supprimer cette vanne : elle est actuellement active dans l\'automation.');
+        if (state.globalAutomationActive && state.activeAutomated ESP32Id === id) {
+            alert('Impossible de supprimer cette  ESP32 : elle est actuellement active dans l\'automation.');
             return;
         }
 
@@ -2414,10 +2414,10 @@ function removeValve(id) {
             deleteButton.textContent = '⏳';
         }
 
-        console.log(`Envoi suppression vanne ${id} avecvanne  ID: ${valve.esp32Id}`);
+        console.log(`Envoi suppression  ESP32 ${id} avec ESP32  ID: ${valve.esp32Id}`);
         socket.emit('remove_valve', {
             valveId: id,
-           vanne Id: valve.esp32Id
+            ESP32 Id: valve.esp32Id
         });
 
         // Timeout de sécurité
@@ -2451,7 +2451,7 @@ function removeValve(id) {
                     statusDiv.className = 'scan-status scanning';
                     statusDiv.innerHTML = `
                         <div class="scan-spinner"></div>
-                        <div class="scan-text">Recherche d'appareilsvanne  en cours...</div>
+                        <div class="scan-text">Recherche d'appareils ESP32  en cours...</div>
                         <div class="scan-subtext">Analyse du réseau local pour détecter les modules compatibles</div>
                     `;
                 } else if (devicesFound !== null) {
@@ -2459,19 +2459,19 @@ function removeValve(id) {
                     if (devicesFound > 0) {
                         statusDiv.innerHTML = `
                             <div class="scan-text">✅ Recherche terminée</div>
-                            <div class="scan-subtext">${devicesFound} appareil(s)vanne  détecté(s) sur le réseau</div>
+                            <div class="scan-subtext">${devicesFound} appareil(s) ESP32  détecté(s) sur le réseau</div>
                         `;
                     } else {
                         statusDiv.innerHTML = `
                             <div class="scan-text">❌ Aucun appareil trouvé</div>
-                            <div class="scan-subtext">Vérifiez que vos modulesvanne  sont allumés et connectés au réseau</div>
+                            <div class="scan-subtext">Vérifiez que vos modules ESP32  sont allumés et connectés au réseau</div>
                         `;
                     }
                 } else {
                     statusDiv.className = 'scan-status';
                     statusDiv.innerHTML = `
                         <div class="scan-text">Aucune recherche en cours</div>
-                        <div class="scan-subtext">Cliquez sur "Rechercher des Appareils" pour détecter les modulesvanne  disponibles</div>
+                        <div class="scan-subtext">Cliquez sur "Rechercher des Appareils" pour détecter les modules ESP32  disponibles</div>
                     `;
                 }
             }
@@ -2677,7 +2677,7 @@ function removeValve(id) {
                 
                 if (flowElement) {
                     const isFlowAlert = state.currentStats.debitActuel < ALERT_MIN_DEBIT && 
-                        state.currentStats.vannesStates.some(v => v.etat === 'ouvert');
+                        state.currentStats. ESP32sStates.some(v => v.etat === 'ouvert');
                     
                     flowElement.className = isFlowAlert ? 'value alert' : 'value';
                     flowElement.innerHTML = `${state.currentStats.debitActuel.toFixed(1)} <span class="unit">L/min</span>`;
@@ -2696,7 +2696,7 @@ function removeValve(id) {
                 }
                 
                 if (openValvesElement) {
-                    const openCount = state.currentStats.vannesStates.filter(v => v.etat === 'ouvert').length;
+                    const openCount = state.currentStats. ESP32sStates.filter(v => v.etat === 'ouvert').length;
                     openValvesElement.textContent = openCount;
                 }
             }
@@ -2708,8 +2708,8 @@ function removeValve(id) {
                 container.innerHTML = '';
                 
                 valveDefinitions.forEach(valve => {
-                    const vanneState = state.currentStats.vannesStates.find(v => v.id === valve.id);
-                    const etat = vanneState?.etat ?? 'ferme';
+                    const  ESP32State = state.currentStats. ESP32sStates.find(v => v.id === valve.id);
+                    const etat =  ESP32State?.etat ?? 'ferme';
                     const styleClass = getEtatStyle(etat);
                     
                     const valveCard = document.createElement('div');
@@ -2789,15 +2789,15 @@ function removeValve(id) {
 
                 // Generate mock data for distributed volume chart
                 const distributedData = {
-                    vanne1: [4.3, 2.5, 3.5, 4.5],
-                    vanne7: [2.4, 4.4, 1.8, 2.8],
-                    vanne12: [2, 2, 3, 5]
+                     ESP321: [4.3, 2.5, 3.5, 4.5],
+                     ESP327: [2.4, 4.4, 1.8, 2.8],
+                     ESP3212: [2, 2, 3, 5]
                 };
 
                 if (distributedVolumeChart) {
-                    distributedVolumeChart.data.datasets[0].data = distributedData.vanne1;
-                    distributedVolumeChart.data.datasets[1].data = distributedData.vanne7;
-                    distributedVolumeChart.data.datasets[2].data = distributedData.vanne12;
+                    distributedVolumeChart.data.datasets[0].data = distributedData. ESP321;
+                    distributedVolumeChart.data.datasets[1].data = distributedData. ESP327;
+                    distributedVolumeChart.data.datasets[2].data = distributedData. ESP3212;
                     distributedVolumeChart.update('none');
                 }
             }
@@ -2808,58 +2808,58 @@ function removeValve(id) {
                 
                 container.innerHTML = '';
                 
-                state.currentStats.vannesStates.forEach(vanneState => {
-                    const vanneInfo = valveDefinitions.find(v => v.id === vanneState.id);
-                    if (!vanneInfo) return;
+                state.currentStats. ESP32sStates.forEach( ESP32State => {
+                    const  ESP32Info = valveDefinitions.find(v => v.id ===  ESP32State.id);
+                    if (! ESP32Info) return;
                     
-                    const styleClass = getEtatStyle(vanneState.etat);
-                    const isCurrentlyAutomated = state.globalAutomationActive && vanneState.automated;
-                    const isActiveAutomated = isCurrentlyAutomated && state.activeAutomatedVanneId === vanneState.id;
+                    const styleClass = getEtatStyle( ESP32State.etat);
+                    const isCurrentlyAutomated = state.globalAutomationActive &&  ESP32State.automated;
+                    const isActiveAutomated = isCurrentlyAutomated && state.activeAutomated ESP32Id ===  ESP32State.id;
                     
                     const card = document.createElement('div');
                     card.className = `valve-management-card ${styleClass}`;
                     
                     card.innerHTML = `
-                        <h3>${vanneInfo.nom}</h3>
+                        <h3>${ ESP32Info.nom}</h3>
                         
                         <div class="valve-status">
                             <span class="light ${styleClass}"></span>
-                            <span class="text">État: ${vanneState.etat}</span>
+                            <span class="text">État: ${ ESP32State.etat}</span>
                         </div>
                         
-                        ${isActiveAutomated ? `<p style="color: #1d4ed8; font-weight: bold; margin-bottom: 8px;">Volume actuel: ${vanneState.currentAutomatedVolume.toFixed(1)} L</p>` : ''}
+                        ${isActiveAutomated ? `<p style="color: #1d4ed8; font-weight: bold; margin-bottom: 8px;">Volume actuel: ${ ESP32State.currentAutomatedVolume.toFixed(1)} L</p>` : ''}
                         
                         <div class="automation-section">
                             <label>Automation:</label>
-                            <input type="checkbox" ${vanneState.automated ? 'checked' : ''} 
-                                onchange="toggleValveAutomation(${vanneState.id}, this.checked)">
-                            <span class="status">${vanneState.automated ? 'Activé' : 'Désactivé'}</span>
+                            <input type="checkbox" ${ ESP32State.automated ? 'checked' : ''} 
+                                onchange="toggleValveAutomation(${ ESP32State.id}, this.checked)">
+                            <span class="status">${ ESP32State.automated ? 'Activé' : 'Désactivé'}</span>
                         </div>
                         
                         <div class="limit-section">
                             <label>Limite de Volume (L):</label>
-                            <input type="number" value="${vanneState.automationLimit}" min="1" max="10000"
-                                ${!vanneState.automated ? 'disabled' : ''}
-                                onchange="setValveLimit(${vanneState.id}, this.value)">
+                            <input type="number" value="${ ESP32State.automationLimit}" min="1" max="10000"
+                                ${! ESP32State.automated ? 'disabled' : ''}
+                                onchange="setValveLimit(${ ESP32State.id}, this.value)">
                         </div>
                         
                         <div class="valve-buttons">
                             <button class="valve-button open" 
-                                    ${vanneState.etat === 'ouvert' || isCurrentlyAutomated ? 'disabled' : ''}
-                                    onclick="changeValveState(${vanneState.id}, 'ouvert')">
+                                    ${ ESP32State.etat === 'ouvert' || isCurrentlyAutomated ? 'disabled' : ''}
+                                    onclick="changeValveState(${ ESP32State.id}, 'ouvert')">
                                 Ouvrir
                             </button>
                             <button class="valve-button close"
-                                    ${vanneState.etat === 'ferme' || isCurrentlyAutomated ? 'disabled' : ''}
-                                    onclick="changeValveState(${vanneState.id}, 'ferme')">
+                                    ${ ESP32State.etat === 'ferme' || isCurrentlyAutomated ? 'disabled' : ''}
+                                    onclick="changeValveState(${ ESP32State.id}, 'ferme')">
                                 Fermer
                             </button>
                         </div>
                         
                         <button class="delete-icon" 
                                 ${isCurrentlyAutomated ? 'disabled' : ''}
-                                onclick="removeValve(${vanneState.id})"
-                                title="Supprimer cette vanne">
+                                onclick="removeValve(${ ESP32State.id})"
+                                title="Supprimer cette  ESP32">
                             🗑️
                         </button>
                     `;
@@ -2876,8 +2876,8 @@ function removeValve(id) {
                         automationToggle.className = 'automation-toggle active';
                         automationToggle.textContent = 'Activé';
                         
-                        if (state.activeAutomatedVanneId && activeValveDisplay) {
-                            activeValveDisplay.textContent = `Vanne Active: ${getValveName(state.activeAutomatedVanneId)}`;
+                        if (state.activeAutomated ESP32Id && activeValveDisplay) {
+                            activeValveDisplay.textContent = ` ESP32 Active: ${getValveName(state.activeAutomated ESP32Id)}`;
                             activeValveDisplay.classList.remove('hidden');
                         } else if (activeValveDisplay) {
                             activeValveDisplay.classList.add('hidden');
@@ -2902,7 +2902,7 @@ function removeValve(id) {
                     const valve = valveDefinitions.find(v => v.id === id);
                     if (!valve) return;
                     
-                    const isAutomated = state.currentStats.vannesStates.find(v => v.id === id)?.automated;
+                    const isAutomated = state.currentStats. ESP32sStates.find(v => v.id === id)?.automated;
                     
                     const item = document.createElement('div');
                     item.className = `sequence-item ${isAutomated ? 'automated' : 'not-automated'}`;
@@ -2960,31 +2960,31 @@ function removeValve(id) {
                     const volumeCell = row.insertCell();
                     volumeCell.textContent = point.volume.toFixed(1);
                     
-                    const vannesCell = row.insertCell();
-                    const vannesDiv = document.createElement('div');
-                    vannesDiv.style.display = 'flex';
-                    vannesDiv.style.flexDirection = 'column';
-                    vannesDiv.style.gap = '4px';
+                    const  ESP32sCell = row.insertCell();
+                    const  ESP32sDiv = document.createElement('div');
+                     ESP32sDiv.style.display = 'flex';
+                     ESP32sDiv.style.flexDirection = 'column';
+                     ESP32sDiv.style.gap = '4px';
                     
-                    point.vannes.forEach(v => {
-                        const vanneInfo = valveDefinitions.find(item => item.id === v.id);
+                    point. ESP32s.forEach(v => {
+                        const  ESP32Info = valveDefinitions.find(item => item.id === v.id);
                         const styleClass = getEtatStyle(v.etat);
                         
-                        const vanneDiv = document.createElement('div');
-                        vanneDiv.style.display = 'flex';
-                        vanneDiv.style.alignItems = 'center';
-                        vanneDiv.style.gap = '8px';
+                        const  ESP32Div = document.createElement('div');
+                         ESP32Div.style.display = 'flex';
+                         ESP32Div.style.alignItems = 'center';
+                         ESP32Div.style.gap = '8px';
                         
-                        vanneDiv.innerHTML = `
+                         ESP32Div.innerHTML = `
                             <span class="valve-light ${styleClass}" style="width: 12px; height: 12px;"></span>
                             <span style="font-size: 12px; color: #374151;">
-                                ${vanneInfo?.nom}: <span style="font-weight: 500; text-transform: capitalize; color: ${v.etat === 'ouvert' ? '#166534' : v.etat === 'ferme' ? '#dc2626' : '#ea580c'};">${v.etat}</span>
+                                ${ ESP32Info?.nom}: <span style="font-weight: 500; text-transform: capitalize; color: ${v.etat === 'ouvert' ? '#166534' : v.etat === 'ferme' ? '#dc2626' : '#ea580c'};">${v.etat}</span>
                             </span>
                         `;
-                        vannesDiv.appendChild(vanneDiv);
+                         ESP32sDiv.appendChild( ESP32Div);
                     });
                     
-                    vannesCell.appendChild(vannesDiv);
+                     ESP32sCell.appendChild( ESP32sDiv);
                 });
             }
 
@@ -3043,45 +3043,45 @@ function removeValve(id) {
      
       
             function toggleValveAutomation(id, automated) {
-                const vanneIndex = state.currentStats.vannesStates.findIndex(v => v.id === id);
-                if (vanneIndex !== -1) {
-                    state.currentStats.vannesStates[vanneIndex].automated = automated;
+                const  ESP32Index = state.currentStats. ESP32sStates.findIndex(v => v.id === id);
+                if ( ESP32Index !== -1) {
+                    state.currentStats. ESP32sStates[ ESP32Index].automated = automated;
                     
                     let alerts = [...state.currentStats.alerts];
-                    if (state.globalAutomationActive && state.activeAutomatedVanneId === id && !automated) {
-                        const currentVanneIndex = state.automationSequence.indexOf(id);
-                        let nextVanneFound = false;
-                        let newActiveAutomatedVanneId = null;
+                    if (state.globalAutomationActive && state.activeAutomated ESP32Id === id && !automated) {
+                        const current ESP32Index = state.automationSequence.indexOf(id);
+                        let next ESP32Found = false;
+                        let newActiveAutomated ESP32Id = null;
                         let newGlobalAutomationActive = state.globalAutomationActive;
 
-                        const tempVannes = state.currentStats.vannesStates.map(v => 
+                        const temp ESP32s = state.currentStats. ESP32sStates.map(v => 
                             v.id === id ? { ...v, etat: "ferme", currentAutomatedVolume: 0 } : v
                         );
-                        alerts.push(`[Automation] Vanne ${getValveName(id)} retirée de l'automation.`);
+                        alerts.push(`[Automation]  ESP32 ${getValveName(id)} retirée de l'automation.`);
 
                         for (let i = 1; i <= state.automationSequence.length; i++) {
-                            const candidateIndex = (currentVanneIndex + i) % state.automationSequence.length;
-                            const candidateVanneId = state.automationSequence[candidateIndex];
-                            const candidateVanneState = tempVannes.find(v => v.id === candidateVanneId);
+                            const candidateIndex = (current ESP32Index + i) % state.automationSequence.length;
+                            const candidate ESP32Id = state.automationSequence[candidateIndex];
+                            const candidate ESP32State = temp ESP32s.find(v => v.id === candidate ESP32Id);
 
-                            if (candidateVanneState && candidateVanneState.automated) {
-                                candidateVanneState.etat = "ouvert";
-                                candidateVanneState.currentAutomatedVolume = 0;
-                                newActiveAutomatedVanneId = candidateVanneState.id;
-                                alerts.push(`[Automation] Vanne ${getValveName(candidateVanneId)} ouverte (séquence suite à désactivation).`);
-                                nextVanneFound = true;
+                            if (candidate ESP32State && candidate ESP32State.automated) {
+                                candidate ESP32State.etat = "ouvert";
+                                candidate ESP32State.currentAutomatedVolume = 0;
+                                newActiveAutomated ESP32Id = candidate ESP32State.id;
+                                alerts.push(`[Automation]  ESP32 ${getValveName(candidate ESP32Id)} ouverte (séquence suite à désactivation).`);
+                                next ESP32Found = true;
                                 break;
                             }
                         }
-                        if (!nextVanneFound) {
+                        if (!next ESP32Found) {
                             newGlobalAutomationActive = false;
-                            newActiveAutomatedVanneId = null;
-                            alerts.push(`[Automation] Aucune autre vanne automatisée disponible. Automation globale désactivée.`);
+                            newActiveAutomated ESP32Id = null;
+                            alerts.push(`[Automation] Aucune autre  ESP32 automatisée disponible. Automation globale désactivée.`);
                         }
                         
-                        state.currentStats.vannesStates = tempVannes;
+                        state.currentStats. ESP32sStates = temp ESP32s;
                         state.globalAutomationActive = newGlobalAutomationActive;
-                        state.activeAutomatedVanneId = newActiveAutomatedVanneId;
+                        state.activeAutomated ESP32Id = newActiveAutomated ESP32Id;
                     }
                     
                     state.currentStats.alerts = alerts;
@@ -3094,9 +3094,9 @@ function removeValve(id) {
                 const validLimit = validateValveLimit(limit);
                 if (validLimit === false) return;
                 
-                const vanneIndex = state.currentStats.vannesStates.findIndex(v => v.id === id);
-                if (vanneIndex !== -1) {
-                    state.currentStats.vannesStates[vanneIndex].automationLimit = validLimit;
+                const  ESP32Index = state.currentStats. ESP32sStates.findIndex(v => v.id === id);
+                if ( ESP32Index !== -1) {
+                    state.currentStats. ESP32sStates[ ESP32Index].automationLimit = validLimit;
                     updateUI();
                     showNotification(`Limite mise à jour: ${validLimit}L pour ${getValveName(id)}`);
                 }
@@ -3142,16 +3142,16 @@ function removeValve(id) {
                 if (!valve) return;
 
                 const actionType = valve.esp32Id ? "déconnecter" : "supprimer";
-                const confirmationMessage = `Êtes-vous sûr de vouloir ${actionType} la vanne "${valve.nom}" ?`;
+                const confirmationMessage = `Êtes-vous sûr de vouloir ${actionType} la  ESP32 "${valve.nom}" ?`;
 
                 if (confirm(confirmationMessage)) {
-                    // Vérifier si la vanne est active dans l'automation
-                    if (state.globalAutomationActive && state.activeAutomatedVanneId === id) {
-                        alert('Impossible de supprimer cette vanne : elle est actuellement active dans l\'automation.');
+                    // Vérifier si la  ESP32 est active dans l'automation
+                    if (state.globalAutomationActive && state.activeAutomated ESP32Id === id) {
+                        alert('Impossible de supprimer cette  ESP32 : elle est actuellement active dans l\'automation.');
                         return;
                     }
 
-                    // Gérer les appareilsvanne  connectés AVANT suppression
+                    // Gérer les appareils ESP32  connectés AVANT suppression
                     if (valve.esp32Id) {
                         const device = state.discoveredDevices.find(d => d.id === valve.esp32Id);
                         if (device) {
@@ -3159,31 +3159,31 @@ function removeValve(id) {
                         }
                     }
 
-                    // Supprimer la vanne des définitions
+                    // Supprimer la  ESP32 des définitions
                     valveDefinitions = valveDefinitions.filter(v => v.id !== id);
 
-                    // Supprimer la vanne des états
-                    state.currentStats.vannesStates = state.currentStats.vannesStates.filter(v => v.id !== id);
+                    // Supprimer la  ESP32 des états
+                    state.currentStats. ESP32sStates = state.currentStats. ESP32sStates.filter(v => v.id !== id);
 
-                    // Supprimer la vanne de la séquence d'automation
+                    // Supprimer la  ESP32 de la séquence d'automation
                     state.automationSequence = state.automationSequence.filter(valveId => valveId !== id);
 
                     // Gérer l'automation globale si nécessaire
                     if (state.globalAutomationActive) {
-                        const remainingAutomatedValves = state.currentStats.vannesStates.filter(v => v.automated);
+                        const remainingAutomatedValves = state.currentStats. ESP32sStates.filter(v => v.automated);
                         if (remainingAutomatedValves.length === 0) {
                             state.globalAutomationActive = false;
-                            state.activeAutomatedVanneId = null;
-                            state.currentStats.alerts.push('Automation globale désactivée : aucune vanne automatisée restante.');
+                            state.activeAutomated ESP32Id = null;
+                            state.currentStats.alerts.push('Automation globale désactivée : aucune  ESP32 automatisée restante.');
                         }
                     }
 
                     // Ajouter une alerte
-                    state.currentStats.alerts.push(`La vanne "${valve.nom}" a été ${actionType}e avec succès.`);
+                    state.currentStats.alerts.push(`La  ESP32 "${valve.nom}" a été ${actionType}e avec succès.`);
 
                     // Mettre à jour l'interface
                     updateUI();
-                    showNotification(`La vanne "${valve.nom}" a été ${actionType}e avec succès.`);
+                    showNotification(`La  ESP32 "${valve.nom}" a été ${actionType}e avec succès.`);
                 }
             }
 
@@ -3211,7 +3211,7 @@ function removeValve(id) {
                     Date: new Date(point.timestamp).toLocaleString(),
                     'Débit (L/min)': point.debit,
                     'Volume (L)': point.volume,
-                    Vannes: point.vannes.map(v => `${getValveName(v.id)}:${v.etat}`).join(' | ')
+                     ESP32s: point. ESP32s.map(v => `${getValveName(v.id)}:${v.etat}`).join(' | ')
                 }));
                 downloadCSV(csv, 'Historique_debit_volume');
             }
@@ -3376,21 +3376,21 @@ function removeValve(id) {
                             data: {
                                 labels: ['4.3', '2.5', '3.5', '4.5'],
                                 datasets: [{
-                                    label: 'Vanne 1',
+                                    label: ' ESP32 1',
                                     data: [4.3, 2.5, 3.5, 4.5],
                                     borderColor: '#3b82f6',
                                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                                     borderWidth: 2,
                                     tension: 0.4
                                 }, {
-                                    label: 'Vanne 7',
+                                    label: ' ESP32 7',
                                     data: [2.4, 4.4, 1.8, 2.8],
                                     borderColor: '#f97316',
                                     backgroundColor: 'rgba(249, 115, 22, 0.1)',
                                     borderWidth: 2,
                                     tension: 0.4
                                 }, {
-                                    label: 'Vanne 12',
+                                    label: ' ESP32 12',
                                     data: [2, 2, 3, 5],
                                     borderColor: '#64748b',
                                     backgroundColor: 'rgba(100, 116, 139, 0.1)',
